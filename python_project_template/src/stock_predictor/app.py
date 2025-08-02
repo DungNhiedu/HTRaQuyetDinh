@@ -386,7 +386,7 @@ def main():
     st.markdown('<div style="text-align: center; margin-bottom: 2rem;">Dự báo chỉ số thị trường sử dụng Machine Learning</div>', unsafe_allow_html=True)
     
     # Sidebar
-    st.sidebar.header("⚙️ Configuration")
+    st.sidebar.header("⚙️ Hệ Thống Chính")
     
     # AI Prediction Button
     st.sidebar.markdown("### 🤖 AI Prediction")
@@ -752,11 +752,31 @@ def main():
                 shutil.rmtree(temp_dir)
             os.makedirs(temp_dir, exist_ok=True)
             
+            # Save files to temp directory
             for uploaded_file in uploaded_files:
                 with open(os.path.join(temp_dir, uploaded_file.name), "wb") as f:
                     f.write(uploaded_file.getbuffer())
             
-            if st.button("🔄 Process Uploaded Data", type="primary"):
+            st.success(f"✅ Files saved to temporary directory: {temp_dir}")
+            
+            # Add reset button
+            if st.button("🗑️ Clear Previous Results", key="clear_results", help="Clear previous processing results"):
+                # Clear session state
+                for key in ['upload_processed', 'uploaded_data', 'uploaded_time_duration', 'uploaded_features']:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.success("✅ Previous results cleared!")
+                st.rerun()
+            
+            # Add Process button with a unique key
+            process_button = st.button(
+                "🔄 Process Uploaded Data", 
+                type="primary", 
+                key="process_uploaded_data_button",
+                help="Click to process your uploaded CSV files and generate analysis"
+            )
+            
+            if process_button:
                 with st.spinner("Processing uploaded CSV files..."):
                     try:
                         # Step 1: Load and process data
@@ -766,7 +786,7 @@ def main():
                         
                         if merged_data.empty:
                             st.error("❌ No data could be processed from the uploaded files. Please check the file format.")
-                            return
+                            st.stop()
                         
                         st.success(f"✅ Successfully processed data! Shape: {merged_data.shape}")
                         st.info(f"Available columns: {list(merged_data.columns)}")
@@ -783,7 +803,12 @@ def main():
                         if missing_columns:
                             st.error(f"❌ Missing required columns: {missing_columns}")
                             st.error("Your CSV file must contain at least a 'close' price column.")
-                            return
+                            st.stop()
+                        
+                        # Store in session state for persistence
+                        st.session_state['upload_processed'] = True
+                        st.session_state['uploaded_data'] = merged_data
+                        st.session_state['uploaded_time_duration'] = uploaded_time_duration
                         
                         # Display basic info for uploaded data
                         st.markdown('<div class="section-header">📊 Uploaded Data Analysis</div>', unsafe_allow_html=True)
@@ -1126,6 +1151,58 @@ def main():
                         
                     except Exception as e:
                         st.error(f"Error processing files: {str(e)}")
+                        
+        # Display processed data if available in session state
+        if st.session_state.get('upload_processed', False) and 'uploaded_data' in st.session_state:
+            merged_data = st.session_state['uploaded_data']
+            uploaded_time_duration = st.session_state['uploaded_time_duration']
+            
+            st.success("✅ Data processing completed! Here are your results:")
+            
+            # Display basic info for uploaded data
+            st.markdown('<div class="section-header">📊 Uploaded Data Analysis</div>', unsafe_allow_html=True)
+            
+            try:
+                col1, col2, col3, col4, col5 = st.columns(5)
+                with col1:
+                    st.metric("Time Duration", uploaded_time_duration.split(' (')[0])
+                with col2:
+                    st.metric("Total Records", len(merged_data))
+                with col3:
+                    if 'close' in merged_data.columns:
+                        st.metric("Latest Price", f"{merged_data['close'].iloc[-1]:.2f}")
+                    else:
+                        st.metric("Latest Price", "N/A")
+                with col4:
+                    if 'return' in merged_data.columns:
+                        latest_return = merged_data['return'].iloc[-1] if not pd.isna(merged_data['return'].iloc[-1]) else 0
+                        st.metric("Latest Change %", f"{latest_return:.2f}%")
+                    else:
+                        st.metric("Latest Change %", "N/A")
+                with col5:
+                    if 'target' in merged_data.columns:
+                        up_days = (merged_data['target'] == 1).sum()
+                        st.metric("Up Days %", f"{100 * up_days / len(merged_data):.1f}%")
+                    else:
+                        st.metric("Up Days %", "N/A")
+            except Exception as e:
+                st.error(f"⚠️ Error displaying metrics: {str(e)}")
+            
+            # Show data preview
+            try:
+                with st.expander("📊 Your Data Analysis", expanded=True):
+                    st.write("**Processed data preview (First 10 rows):**")
+                    display_data = merged_data.head(10).copy()
+                    if 'date' in display_data.columns:
+                        display_data['date'] = pd.to_datetime(display_data['date']).dt.strftime('%Y-%m-%d')
+                    st.dataframe(display_data, use_container_width=True)
+            except Exception as e:
+                st.error(f"⚠️ Error displaying data preview: {str(e)}")
+            
+            # Add technical indicators
+            st.markdown('<div class="section-header">🔧 Technical Analysis</div>', unsafe_allow_html=True)
+            
+            # ... rest of the processing will be added here...
         
         # If no files uploaded yet, show info
         else:

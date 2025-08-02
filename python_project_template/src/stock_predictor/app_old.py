@@ -55,7 +55,7 @@ def main():
     st.markdown("Dự báo chỉ số thị trường chứng khoán sử dụng kết hợp nhiều kỹ thuật Machine Learning")
     
     # Sidebar
-    st.sidebar.header("⚙️ Configuration")
+    st.sidebar.header("⚙️ Hệ Thống Chính")
     
     # Symbol selection
     symbol_options = {
