@@ -1,0 +1,57 @@
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2025-08-01 19:54:14.303 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/src/stock_predictor/app.py", line 891, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/src/stock_predictor/app.py", line 644, in main
+    if use_ai_prediction:
+       ^^^^^^^^^^^^^^^^^
+NameError: name 'use_ai_prediction' is not defined
+2025-08-01 19:54:20.093 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/src/stock_predictor/app.py", line 891, in <module>
+    main()
+    ~~~~^^
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/src/stock_predictor/app.py", line 644, in main
+    if use_ai_prediction:
+       ^^^^^^^^^^^^^^^^^
+NameError: name 'use_ai_prediction' is not defined
+Not enough data for DỮ LIỆU LỊCH SỬ VN 30: 24 rows (need at least 26)
+Not enough data for DỮ LIỆU LỊCH SỬ VN 30: 24 rows (need at least 26)
+2025-08-01 20:00:21.628 Script compilation error
+Traceback (most recent call last):
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 571, in _run_script
+    code = self._script_cache.get_bytecode(script_path)
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_cache.py", line 72, in get_bytecode
+    filebody = magic.add_magic(filebody, script_path)
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/magic.py", line 45, in add_magic
+    tree = ast.parse(code, script_path, "exec")
+  File "/opt/homebrew/Cellar/python@3.13/3.13.3_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/ast.py", line 54, in parse
+    return compile(source, filename, mode, flags,
+                   _feature_version=feature_version, optimize=optimize)
+  File "/Users/dungnhi/Documents/HTRaQuyetDinh/python_project_template/src/stock_predictor/app.py", line 20
+    from data.preprocessor import DataPreproce                                st.markdown("#### 📊 Dự báo chi tiết:")
+                                                                              ^^
+SyntaxError: invalid syntax
+2025-08-01 20:00:21.635 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+  Stopping...
