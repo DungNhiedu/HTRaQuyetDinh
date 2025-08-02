@@ -25,7 +25,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
 st.markdown("""
 <style>
     .main-header {
@@ -85,7 +84,6 @@ def create_sample_data(n_days=365):
     
     df = pd.DataFrame(data)
     
-    # Calculate return and target
     df['return'] = df['close'].pct_change() * 100
     df['return'] = df['return'].round(2).fillna(0)
     df['target'] = (df['return'] > 0).astype(int)
