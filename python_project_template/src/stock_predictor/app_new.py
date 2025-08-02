@@ -183,7 +183,6 @@ def plot_technical_indicators(data):
 def main():
     """Main application function."""
     
-    # Header
     st.markdown('<div class="main-header">📈 Stock Market Prediction Demo</div>', unsafe_allow_html=True)
     st.markdown('<div style="text-align: center; margin-bottom: 2rem;">Dự báo chỉ số thị trường sử dụng Machine Learning</div>', unsafe_allow_html=True)
     
