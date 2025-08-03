@@ -412,9 +412,15 @@ def main():
     
     # Check if we have any data available for AI prediction
     has_sample_data = demo_option == "Demo Dữ Liệu Mẫu"
-    has_uploaded_data = (demo_option == "Tải File CSV" and 
-                        st.session_state.get('upload_processed', False) and 
-                        'uploaded_data' in st.session_state)
+    
+    # For Upload CSV, check if process button was clicked or data already exists
+    has_uploaded_data = False
+    if demo_option == "Tải File CSV":
+        # Check if data is already processed
+        data_processed = st.session_state.get('upload_processed', False)
+        data_exists = 'uploaded_data' in st.session_state
+        
+        has_uploaded_data = data_processed and data_exists
     
     if has_sample_data or has_uploaded_data:
         use_ai_prediction = st.sidebar.button(
@@ -425,7 +431,13 @@ def main():
         )
     else:
         use_ai_prediction = False
-        st.sidebar.info("💡 Tải dữ liệu để sử dụng dự báo AI")
+        if demo_option == "Tải File CSV":
+            if not st.session_state.get('upload_processed', False):
+                st.sidebar.info("💡 Vui lòng tải lên và xử lý file CSV trước")
+            else:
+                st.sidebar.warning("⚠️ Dữ liệu không sẵn sàng cho dự báo AI")
+        else:
+            st.sidebar.info("💡 Chọn demo hoặc tải dữ liệu để sử dụng dự báo AI")
     
     
     if demo_option == "Demo Dữ Liệu Mẫu":
@@ -605,7 +617,7 @@ def main():
         with st.expander("ℹ️ Về Dữ Liệu VN30"):
             st.write("**Nguồn Dữ Liệu:** Dữ Liệu Lịch Sử Chỉ Số VN30 Việt Nam")
             st.write("**Số Bản Ghi:**", len(sample_data))
-            st.write("**Đặc trưng sau làm giàu:**", len(enriched_data.columns))
+            st.write("**Đặc trưng sau khi enrich data:**", len(enriched_data.columns))
         
         # Model demonstration
         st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
@@ -940,6 +952,10 @@ def main():
             
             show_popup_message(f"File đã được lưu vào thư mục tạm: {temp_dir}", "info")
             
+            # Information about next steps
+            if not st.session_state.get('upload_processed', False):
+                st.info("👇 **Bước tiếp theo:** Nhấp vào nút bên dưới để xử lý dữ liệu và kích hoạt tính năng dự báo AI")
+            
             # Add Process button with a unique key
             process_button = st.button(
                 "🔄 Xử Lý Dữ Liệu Đã Tải Lên", 
@@ -981,6 +997,9 @@ def main():
                         st.session_state['upload_processed'] = True
                         st.session_state['uploaded_data'] = merged_data
                         st.session_state['uploaded_time_duration'] = uploaded_time_duration
+                        
+                        # Success message about AI prediction availability
+                        st.success("✅ **Dữ liệu đã được xử lý thành công!** 🤖 Tính năng dự báo AI hiện đã sẵn sàng trong thanh bên.")
                         
                         # Display basic info for uploaded data
                         st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Đã Tải Lên</div>', unsafe_allow_html=True)
@@ -1126,13 +1145,13 @@ def main():
                         # Show final dataset preview
                         st.markdown('<div class="section-header">📋 Xem Trước Bộ Dữ Liệu Cuối Cùng</div>', unsafe_allow_html=True)
                         
-                        st.write("**Xem trước bộ dữ liệu làm giàu cuối cùng (Dữ Liệu Đã Tải Lên Của Bạn):**")
+                        st.write("**Xem trước bộ dữ liệu đã được enrich cuối cùng (Dữ Liệu Đã Tải Lên Của Bạn):**")
                         st.dataframe(enriched_data.head(), use_container_width=True)
                         
-                        # Model Training Demo - HIDDEN AS REQUESTED
-                        # st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
+                        # Model Training Demo
+                        st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
                         
-                        # if st.button("🚀 Chạy Demo Huấn Luyện Mô Hình", type="primary", key="model_training_uploaded"):
+                        if st.button("🚀 Chạy Demo Huấn Luyện Mô Hình", type="primary", key="model_training_uploaded"):
                             with st.spinner("Đang chuẩn bị dữ liệu cho mô hình..."):
                                 # Prepare data for modeling
                                 # Show data info before cleaning
