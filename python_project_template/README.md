@@ -169,6 +169,10 @@ All required packages are listed in `requirements.txt`:
 ## Author
 
 Dương Thị Ngọc Dung - 24210015
+Trần Đình Bảo - 24210010
+Nguyễn Tiến Lộc - 24210044
+Lê Hữu Phước - 24210066
+Nguyễn Thị Thu Thanh - 24210082
 
 ## License
 
