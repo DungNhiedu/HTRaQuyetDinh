@@ -19,6 +19,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from data.preprocessor import DataPreprocessor
 from data.features import add_technical_indicators, FeatureEngineer
 from models.traditional import TraditionalModels
+from forecast.forecaster import StockForecaster
+from models.traditional import TraditionalModels
+from forecast.forecaster import StockForecaster
 
 st.set_page_config(
     page_title="Stock Market Prediction Demo",
@@ -482,7 +485,7 @@ def main():
     # Demo options
     demo_option = st.sidebar.selectbox(
         "Choose Demo Type",
-        ["Sample Data Demo", "Upload CSV Files"]
+        ["Sample Data Demo", "Upload CSV Files", "Forecast Demo"]
     )
     
     # Clear AI prediction when switching between demo types
@@ -503,24 +506,24 @@ def main():
         )
     
     if demo_option == "Sample Data Demo":
-        st.markdown('<div class="section-header">📊 Sample Data Analysis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">📊 Phân tích Dữ liệu Mẫu</div>', unsafe_allow_html=True)
         
         # Check if sample data is already processed
         if not st.session_state.get('processed_sample_data', False):
             vn30_file_path = "/Users/dungnhi/Documents/HTRaQuyetDinh/VN30_demo.csv"
             
             try:
-                with st.spinner("Loading VN30 data..."):
+                with st.spinner("Đang tải dữ liệu VN30..."):
                     preprocessor = DataPreprocessor()
                     vn30_data = preprocessor._read_csv_flexible(vn30_file_path)
                     
                     if vn30_data is None:
-                        raise Exception("Could not read VN30 CSV file")
+                        raise Exception("Không thể đọc file CSV VN30")
                     
                     vn30_data = preprocessor._normalize_data_format(vn30_data, "VN30")
                     
                     if vn30_data is None or vn30_data.empty:
-                        raise Exception("Failed to normalize VN30 data format")
+                        raise Exception("Không thể chuẩn hóa định dạng dữ liệu VN30")
                     
                     vn30_data = preprocessor._calculate_returns_and_targets(vn30_data)
                     
@@ -543,8 +546,8 @@ def main():
                     st.session_state['sample_base_data'] = sample_data
                     st.session_state['processed_sample_data'] = True
                 
-                show_popup_message(f"Loaded VN30 data! Shape: {sample_data.shape}", "success")
-                show_popup_message("Using real VN30 index data instead of synthetic data", "info")
+                show_popup_message(f"Đã tải dữ liệu VN30! Kích thước: {sample_data.shape}", "success")
+                show_popup_message("Sử dụng dữ liệu chỉ số VN30 thực tế thay vì dữ liệu tổng hợp", "info")
                 
             except Exception as e:
                 show_popup_message(f"Could not load VN30 data: {str(e)}. Using synthetic data instead.", "warning")
@@ -690,7 +693,7 @@ def main():
                 else:
                     show_popup_message("Not enough clean data for modeling", "error")
     
-    else:  # Upload CSV Files
+    elif demo_option == "Upload CSV Files":
         st.markdown('<div class="section-header">📁 Upload CSV Files</div>', unsafe_allow_html=True)
         
         st.info("Upload CSV files with stock data. Supports multiple formats including VN30 format.")
@@ -905,6 +908,201 @@ def main():
                         
                     else:
                         show_popup_message(f"Not enough clean data for modeling. Need at least 50 samples, but only have {len(clean_data)} after cleaning.", "error")
+    
+    elif demo_option == "Forecast Demo":
+        st.markdown('<div class="section-header">🔮 Dự báo Giá</div>', unsafe_allow_html=True)
+        
+        st.info("Dự báo giá USD/VND và Vàng sử dụng dữ liệu lịch sử và mô hình học máy.")
+        
+        # Initialize forecaster
+        forecaster = StockForecaster()
+        
+        # Load forecast data
+        with st.spinner("Đang tải dữ liệu dự báo..."):
+            data_loaded = forecaster.load_forecast_data()
+        
+        if not data_loaded:
+            st.error("❌ Không thể tải dữ liệu dự báo. Vui lòng đảm bảo các file CSV có sẵn trên Desktop:")
+            st.write("• **Dữ liệu USD/VND:** `Dữ liệu Lịch sử USD_VND.csv`")
+            st.write("• **Dữ liệu Vàng:** `dữ liệu lịch sử giá vàng.csv`")
+            st.info("💡 Các file này nên được đặt trong thư mục `/Users/dungnhi/Desktop/`.")
+        else:
+            show_popup_message(f"Đã tải dữ liệu dự báo cho {len(forecaster.available_symbols)} chỉ số", "success")
+            
+            # Forecast settings
+            st.markdown('<div class="section-header">⚙️ Cài đặt Dự báo</div>', unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                selected_symbol = st.selectbox(
+                    "Chọn Chỉ số để Dự báo",
+                    forecaster.available_symbols,
+                    help="Chọn chỉ số tài chính muốn dự báo"
+                )
+            
+            with col2:
+                forecast_days = st.slider(
+                    "Số Ngày Dự báo",
+                    min_value=7,
+                    max_value=90,
+                    value=30,
+                    step=7,
+                    help="Số ngày dự báo vào tương lai"
+                )
+            
+            # Generate forecast button
+            if st.button("🔮 Tạo Dự báo", type="primary", key="generate_forecast"):
+                with st.spinner(f"Đang tạo dự báo {forecast_days} ngày cho {selected_symbol}..."):
+                    try:
+                        # Create forecast chart
+                        forecast_chart = forecaster.create_forecast_chart(
+                            selected_symbol, 
+                            forecast_days=forecast_days,
+                            historical_days=90
+                        )
+                        
+                        if forecast_chart is None:
+                            show_popup_message("Không thể tạo dự báo. Không đủ dữ liệu.", "error")
+                        else:
+                            show_popup_message(f"Đã tạo dự báo {forecast_days} ngày cho {selected_symbol}", "success")
+                            
+                            # Display forecast chart
+                            st.markdown('<div class="section-header">📈 Biểu đồ Dự báo</div>', unsafe_allow_html=True)
+                            st.plotly_chart(forecast_chart, use_container_width=True)
+                            
+                            # Get forecast summary
+                            summary = forecaster.get_forecast_summary(selected_symbol, forecast_days)
+                            
+                            if summary:
+                                # Display forecast summary
+                                st.markdown('<div class="section-header">📊 Tóm tắt Dự báo</div>', unsafe_allow_html=True)
+                                
+                                # Key metrics
+                                col1, col2, col3, col4 = st.columns(4)
+                                
+                                with col1:
+                                    st.metric(
+                                        "Giá Hiện tại",
+                                        f"{summary['current_price']:,.0f}",
+                                        help="Giá mới nhất từ dữ liệu lịch sử"
+                                    )
+                                
+                                with col2:
+                                    st.metric(
+                                        f"Giá sau {forecast_days} ngày",
+                                        f"{summary['forecast_end_price']:,.0f}",
+                                        delta=f"{summary['price_change']:+,.0f}",
+                                        help="Giá dự báo vào cuối kỳ dự báo"
+                                    )
+                                
+                                with col3:
+                                    st.metric(
+                                        "Biến động Giá %",
+                                        f"{summary['price_change_pct']:+.1f}%",
+                                        help="Phần trăm thay đổi từ giá hiện tại đến giá dự báo"
+                                    )
+                                
+                                with col4:
+                                    # Display trend with color
+                                    trend_color = summary['trend_color']
+                                    st.markdown(
+                                        f"""
+                                        <div style="background-color: {trend_color}; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 5px;">
+                                            <strong>{summary['trend']}</strong>
+                                        </div>
+                                        """,
+                                        unsafe_allow_html=True
+                                    )
+                                
+                                # Additional forecast details
+                                with st.expander("📋 Phân tích Dự báo Chi tiết", expanded=True):
+                                    col1, col2 = st.columns(2)
+                                    
+                                    with col1:
+                                        st.write("**Phạm vi Giá Dự báo:**")
+                                        st.write(f"• **Cao nhất dự báo:** {summary['max_forecast_price']:,.0f}")
+                                        st.write(f"• **Thấp nhất dự báo:** {summary['min_forecast_price']:,.0f}")
+                                        st.write(f"• **Trung bình dự báo:** {summary['avg_forecast_price']:,.0f}")
+                                    
+                                    with col2:
+                                        st.write("**Đánh giá Rủi ro:**")
+                                        volatility = summary['historical_volatility']
+                                        if volatility < 1:
+                                            risk_level = "🟢 Rủi ro Thấp"
+                                        elif volatility < 2:
+                                            risk_level = "🟡 Rủi ro Trung bình"
+                                        else:
+                                            risk_level = "🔴 Rủi ro Cao"
+                                        
+                                        st.write(f"• **Mức độ Rủi ro:** {risk_level}")
+                                        st.write(f"• **Biến động Lịch sử:** {volatility:.2f}%")
+                                        
+                                        if summary['price_change_pct'] > 0:
+                                            st.write("• **Triển vọng:** Dự kiến xu hướng tích cực")
+                                        elif summary['price_change_pct'] > -2:
+                                            st.write("• **Triển vọng:** Ổn định với biến động nhỏ")
+                                        else:
+                                            st.write("• **Triển vọng:** Dự kiến xu hướng giảm")
+                                
+                                # Investment recommendations
+                                st.markdown('<div class="section-header">💡 Nhận định Đầu tư</div>', unsafe_allow_html=True)
+                                
+                                if summary['price_change_pct'] > 5:
+                                    recommendation = "📈 **Tín hiệu Mua mạnh** - Dự báo xu hướng tăng mạnh"
+                                    rec_color = "#4CAF50"  # Green background
+                                elif summary['price_change_pct'] > 2:
+                                    recommendation = "📈 **Tín hiệu Mua** - Dự báo xu hướng tăng vừa phải"
+                                    rec_color = "#4CAF50"  # Green background
+                                elif summary['price_change_pct'] > -5:
+                                    recommendation = "📉 **Tín hiệu Thận trọng** - Dự báo xu hướng giảm vừa phải"
+                                    rec_color = "#FF9800"  # Orange background
+                                else:
+                                    recommendation = "📉 **Tín hiệu Bán** - Dự báo xu hướng giảm mạnh"
+                                    rec_color = "#F44336"  # Red background
+                                
+                                st.markdown(
+                                    f"""
+                                    <div style="background-color: {rec_color}; color: white; padding: 15px; border-radius: 10px; border-left: 5px solid #2E7D32;">
+                                        {recommendation}
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                                
+                                st.warning("⚠️ **Tuyên bố miễn trừ trách nhiệm:** Dự báo này dựa trên dữ liệu lịch sử và mô hình học máy. Không nên coi đây là lời khuyên tài chính. Luôn tự nghiên cứu trước khi đưa ra quyết định đầu tư.")
+                            
+                    except Exception as e:
+                        show_popup_message(f"Lỗi khi tạo dự báo: {str(e)}", "error")
+            
+            # Show available data info
+            if forecaster.available_symbols:
+                st.markdown('<div class="section-header">📊 Dữ liệu Có sẵn</div>', unsafe_allow_html=True)
+                
+                for symbol in forecaster.available_symbols:
+                    historical = forecaster.get_historical_data(symbol)
+                    if not historical.empty:
+                        with st.expander(f"📈 Tổng quan Dữ liệu {symbol}"):
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                st.metric("Số bản ghi", len(historical))
+                            
+                            with col2:
+                                date_range = f"{historical['Date'].min().strftime('%Y-%m-%d')} đến {historical['Date'].max().strftime('%Y-%m-%d')}"
+                                st.write(f"**Khoảng thời gian:** {date_range}")
+                            
+                            with col3:
+                                st.metric("Giá mới nhất", f"{historical['Close'].iloc[-1]:,.0f}")
+                            
+                            # Show recent data
+                            st.write("**Dữ liệu gần đây (5 ngày cuối):**")
+                            recent_data = historical.tail(5)[['Date', 'Close', 'Return']].copy()
+                            recent_data['Date'] = recent_data['Date'].dt.strftime('%Y-%m-%d')
+                            recent_data['Close'] = recent_data['Close'].apply(lambda x: f"{x:,.0f}")
+                            recent_data['Return'] = recent_data['Return'].apply(lambda x: f"{x:+.2f}%")
+                            recent_data.columns = ['Ngày', 'Giá đóng cửa', 'Tỷ suất sinh lời']
+                            st.dataframe(recent_data, use_container_width=True, hide_index=True)
     
     # Footer
     st.markdown("---")

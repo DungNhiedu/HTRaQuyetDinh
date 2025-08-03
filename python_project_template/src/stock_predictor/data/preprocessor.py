@@ -491,3 +491,146 @@ class DataPreprocessor:
         final_df = pd.concat(result_data, ignore_index=True)
         
         return final_df
+    
+    def process_uploaded_data(self, uploaded_data: pd.DataFrame) -> pd.DataFrame:
+        """
+        Process uploaded CSV data for stock prediction.
+        
+        Args:
+            uploaded_data: Raw uploaded DataFrame
+            
+        Returns:
+            Processed DataFrame ready for analysis
+        """
+        try:
+            df = uploaded_data.copy()
+            
+            # Handle different CSV formats - check if data is in a single column
+            if len(df.columns) == 1:
+                # Data might be semicolon-separated in a single column
+                first_col = df.columns[0]
+                if ';' in first_col or ';' in str(df.iloc[0, 0]):
+                    # Split the data using semicolon
+                    if ';' in first_col:
+                        # Column names are semicolon-separated
+                        new_columns = first_col.split(';')
+                        # Create new DataFrame with proper structure
+                        data_rows = []
+                        for _, row in df.iterrows():
+                            row_data = str(row.iloc[0]).split(';')
+                            if len(row_data) == len(new_columns):
+                                data_rows.append(row_data)
+                        
+                        df = pd.DataFrame(data_rows, columns=new_columns)
+                    else:
+                        # First row might contain the actual column names
+                        first_row = str(df.iloc[0, 0]).split(';')
+                        data_rows = []
+                        for i in range(1, len(df)):
+                            row_data = str(df.iloc[i, 0]).split(';')
+                            if len(row_data) == len(first_row):
+                                data_rows.append(row_data)
+                        
+                        df = pd.DataFrame(data_rows, columns=first_row)
+            
+            # Clean column names
+            df.columns = df.columns.str.strip().str.lower()
+            
+            # Handle date column
+            date_columns = ['date', 'time', 'datetime', 'timestamp']
+            date_col = None
+            for col in date_columns:
+                if col in df.columns:
+                    date_col = col
+                    break
+            
+            if date_col:
+                # Try multiple date formats
+                date_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y', '%Y/%m/%d']
+                for date_format in date_formats:
+                    try:
+                        df[date_col] = pd.to_datetime(df[date_col], format=date_format, errors='coerce')
+                        break
+                    except:
+                        continue
+                
+                # If still not parsed, try automatic parsing
+                if df[date_col].isna().all():
+                    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+                
+                # Rename to standard 'date' column
+                if date_col != 'date':
+                    df = df.rename(columns={date_col: 'date'})
+                
+                # Sort by date
+                df = df.sort_values('date').reset_index(drop=True)
+            else:
+                # If no date column, create a simple date range
+                df['date'] = pd.date_range(start='2020-01-01', periods=len(df), freq='D')
+            
+            # Handle price columns
+            price_columns = ['close', 'open', 'high', 'low']
+            for col in price_columns:
+                if col in df.columns:
+                    # Remove commas and convert to float
+                    df[col] = df[col].astype(str).str.replace(',', '').str.replace(' ', '')
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+            # Handle volume column
+            if 'volume' in df.columns:
+                df['volume'] = df['volume'].astype(str).str.replace(',', '').str.replace(' ', '')
+                df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
+                df['volume'] = df['volume'].fillna(0)
+            
+            # Ensure we have at least a close price
+            if 'close' not in df.columns:
+                # Try to find any price column
+                possible_price_cols = ['price', 'value', 'close_price', 'closing_price']
+                price_col_found = None
+                for col in possible_price_cols:
+                    if col in df.columns:
+                        price_col_found = col
+                        break
+                
+                if price_col_found:
+                    df['close'] = pd.to_numeric(df[price_col_found], errors='coerce')
+                else:
+                    raise ValueError("No price column found. Please ensure your CSV has a 'close' or 'price' column.")
+            
+            # Add a stock code if not present
+            if 'code' not in df.columns:
+                df['code'] = 'UPLOADED_STOCK'
+            
+            # Calculate return if not present
+            if 'return' not in df.columns:
+                df['return'] = df['close'].pct_change() * 100
+                df['return'] = df['return'].fillna(0)
+            
+            # Create target variable (1 if price goes up next day, 0 if down)
+            if 'target' not in df.columns:
+                df['target'] = (df['close'].shift(-1) > df['close']).astype(int)
+                df['target'] = df['target'].fillna(0)  # Fill last row
+            
+            # Add time-based features
+            df['year'] = df['date'].dt.year
+            df['month'] = df['date'].dt.month
+            df['day'] = df['date'].dt.day
+            df['dayofweek'] = df['date'].dt.dayofweek
+            df['quarter'] = df['date'].dt.quarter
+            
+            # Remove rows with NaN in critical columns
+            df = df.dropna(subset=['close'])
+            
+            # Ensure proper data types
+            numeric_columns = ['close', 'open', 'high', 'low', 'volume', 'return', 'target']
+            for col in numeric_columns:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                    df[col] = df[col].fillna(df[col].mean() if not df[col].isna().all() else 0)
+            
+            logger.info(f"Successfully processed uploaded data: {df.shape}")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error processing uploaded data: {str(e)}")
+            raise ValueError(f"Failed to process uploaded data: {str(e)}")

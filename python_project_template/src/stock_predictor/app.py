@@ -1,5 +1,5 @@
 """
-Streamlit web application for Stock Market Prediction Demo
+Ứng dụng web Streamlit cho Hệ Thống Dự Báo Thị Trường Chứng Khoán
 """
 
 import streamlit as st
@@ -21,8 +21,21 @@ from data.preprocessor import DataPreprocessor
 from data.features import add_technical_indicators, FeatureEngineer
 # from models.traditional import TraditionalModels  # Commented out for demo
 
+def show_popup_message(message, message_type="success"):
+    """Show popup message using streamlit toast for 3 seconds."""
+    if message_type == "success":
+        st.toast(f"✅ {message}", icon="✅")
+    elif message_type == "error":
+        st.toast(f"❌ {message}", icon="❌")
+    elif message_type == "warning":
+        st.toast(f"⚠️ {message}", icon="⚠️")
+    elif message_type == "info":
+        st.toast(f"ℹ️ {message}", icon="ℹ️")
+    else:
+        st.toast(message)
+
 st.set_page_config(
-    page_title="Stock Market Prediction Demo",
+    page_title="Hệ Thống Dự Báo Thị Trường Chứng Khoán",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -195,9 +208,9 @@ def plot_price_chart(data):
             ))
     
     fig.update_layout(
-        title='VN30 Index with Technical Indicators',
-        xaxis_title='Date',
-        yaxis_title='Price',
+        title='Chỉ Số VN30 với Các Chỉ Báo Kỹ Thuật',
+        xaxis_title='Ngày',
+        yaxis_title='Giá',
         height=500,
         showlegend=True
     )
@@ -231,40 +244,40 @@ def plot_technical_indicators(data):
             ))
             
             # Add RSI levels
-            fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Overbought (70)")
-            fig.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold (30)")
+            fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Mua quá mức (70)")
+            fig.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Bán quá mức (30)")
             
             fig.update_layout(
-                title='RSI Technical Indicator',
-                xaxis_title='Date',
-                yaxis_title='RSI Value',
+                title='Chỉ Báo Kỹ Thuật RSI',
+                xaxis_title='Ngày',
+                yaxis_title='Giá Trị RSI',
                 height=300,
                 yaxis=dict(range=[0, 100])
             )
         else:
             # No valid RSI data
             fig.add_annotation(
-                text="No RSI data available",
+                text="Không có dữ liệu RSI",
                 xref="paper", yref="paper",
                 x=0.5, y=0.5, showarrow=False
             )
             fig.update_layout(
-                title='RSI Technical Indicator (No Data)',
-                xaxis_title='Date',
-                yaxis_title='RSI Value',
+                title='Chỉ Báo Kỹ Thuật RSI (Không có dữ liệu)',
+                xaxis_title='Ngày',
+                yaxis_title='Giá Trị RSI',
                 height=300
             )
     else:
         # No RSI columns found
         fig.add_annotation(
-            text="RSI indicator not found",
+            text="Không tìm thấy chỉ báo RSI",
             xref="paper", yref="paper",
             x=0.5, y=0.5, showarrow=False
         )
         fig.update_layout(
-            title='RSI Technical Indicator (Not Available)',
-            xaxis_title='Date',
-            yaxis_title='RSI Value',
+            title='Chỉ Báo Kỹ Thuật RSI (Không có sẵn)',
+            xaxis_title='Ngày',
+            yaxis_title='Giá Trị RSI',
             height=300
         )
     
@@ -316,11 +329,11 @@ def calculate_time_duration(data):
         end_date = dates.max()
         duration = end_date - start_date
         years = duration.days / 365.25
-        return f"{years:.1f} years ({start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')})"
+        return f"{years:.1f} năm ({start_date.strftime('%Y-%m-%d')} đến {end_date.strftime('%Y-%m-%d')})"
     else:
         # Fallback: estimate from row count
         years = len(data) / 365.25
-        return f"~{years:.1f} years ({len(data)} data points)"
+        return f"~{years:.1f} năm ({len(data)} điểm dữ liệu)"
 
 def get_gemini_prediction(data_summary, api_key):
     """Get AI-based market prediction using Gemini Pro."""
@@ -382,47 +395,59 @@ def main():
     """Main application function."""
     
     # Header
-    st.markdown('<div class="main-header">📈 Market Prediction Demo</div>', unsafe_allow_html=True)
-    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">Dự báo chỉ số thị trường sử dụng Machine Learning</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">📈 Hệ Thống Dự Báo Thị Trường</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; margin-bottom: 2rem;">Dự báo chỉ số thị trường sử dụng Machine Learning và AI</div>', unsafe_allow_html=True)
     
     # Sidebar
     st.sidebar.header("⚙️ Hệ Thống Chính")
     
-    # AI Prediction Button
-    st.sidebar.markdown("### 🤖 AI Prediction")
-    use_ai_prediction = st.sidebar.button(
-        "🧠 Get AI Market Prediction",
-        type="primary",
-        help="Click to get AI-powered market analysis and predictions",
-        use_container_width=True
-    )
-    
-    # Demo options
+    # Demo options - define this first
     demo_option = st.sidebar.selectbox(
-        "Choose Demo Type",
-        ["Sample Data Demo", "Upload CSV Files"]
+        "Chọn Kiểu Demo",
+        ["Demo Dữ Liệu Mẫu", "Tải File CSV", "Demo Dự Báo"]
     )
     
-    if demo_option == "Sample Data Demo":
-        st.markdown('<div class="section-header">📊 Sample Data Analysis</div>', unsafe_allow_html=True)
+    # AI Prediction Button - only show if we have data
+    st.sidebar.markdown("### 🤖 Dự Báo AI")
+    
+    # Check if we have any data available for AI prediction
+    has_sample_data = demo_option == "Demo Dữ Liệu Mẫu"
+    has_uploaded_data = (demo_option == "Tải File CSV" and 
+                        st.session_state.get('upload_processed', False) and 
+                        'uploaded_data' in st.session_state)
+    
+    if has_sample_data or has_uploaded_data:
+        use_ai_prediction = st.sidebar.button(
+            "🧠 Nhận Dự Báo Thị Trường AI",
+            type="primary",
+            help="Nhấp để nhận phân tích và dự báo thị trường bằng AI",
+            use_container_width=True
+        )
+    else:
+        use_ai_prediction = False
+        st.sidebar.info("💡 Tải dữ liệu để sử dụng dự báo AI")
+    
+    
+    if demo_option == "Demo Dữ Liệu Mẫu":
+        st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Mẫu</div>', unsafe_allow_html=True)
         
         # Load real VN30 data instead of synthetic data
         vn30_file_path = "/Users/dungnhi/Documents/HTRaQuyetDinh/VN30_demo.csv"
         
         try:
-            with st.spinner("Loading VN30 data..."):
+            with st.spinner("Đang tải dữ liệu VN30..."):
                 # Load and process VN30 data using DataPreprocessor
                 preprocessor = DataPreprocessor()
                 vn30_data = preprocessor._read_csv_flexible(vn30_file_path)
                 
                 if vn30_data is None:
-                    raise Exception("Could not read VN30 CSV file")
+                    raise Exception("Không thể đọc file CSV VN30")
                 
                 # Process the VN30 data directly
                 vn30_data = preprocessor._normalize_data_format(vn30_data, "VN30")
                 
                 if vn30_data is None or vn30_data.empty:
-                    raise Exception("Failed to normalize VN30 data format")
+                    raise Exception("Không thể chuẩn hóa định dạng dữ liệu VN30")
                 
                 # Calculate returns and targets
                 vn30_data = preprocessor._calculate_returns_and_targets(vn30_data)
@@ -430,25 +455,25 @@ def main():
                 # Use this as our sample data
                 sample_data = vn30_data.copy()
                 
-            st.success(f"✅ Loaded VN30 data! Shape: {sample_data.shape}")
+            show_popup_message("Đã tải thành công dữ liệu VN30!", "success")
             
             # Show actual VN30 data analysis
-            with st.expander("📊 VN30 Data Analysis", expanded=True):
-                st.write("**Data Source:** Vietnam VN30 Index Historical Data")
+            with st.expander("📊 Phân Tích Dữ Liệu VN30", expanded=True):
+                st.write("**Nguồn Dữ Liệu:** Dữ Liệu Lịch Sử Chỉ Số VN30 Việt Nam")
                 
                 # Show raw data sample
-                st.write("**Raw VN30 Data (First 10 rows):**")
+                st.write("**Dữ Liệu VN30 Thô (10 dòng đầu):**")
                 display_data = sample_data.head(10).copy()
                 if 'date' in display_data.columns:
                     display_data['date'] = pd.to_datetime(display_data['date']).dt.strftime('%Y-%m-%d')
                 st.dataframe(display_data, use_container_width=True)
             
-            st.info("✅ Using real VN30 index data for analysis and prediction")
+            show_popup_message("Đang sử dụng dữ liệu chỉ số VN30 thực tế", "info")
             
         except Exception as e:
-            st.warning(f"Could not load VN30 data: {str(e)}. Using synthetic data instead.")
+            show_popup_message(f"Không thể tải dữ liệu VN30: {str(e)}. Sử dụng dữ liệu tổng hợp thay thế.", "warning")
             # Fallback to synthetic data
-            with st.spinner("Generating sample data..."):
+            with st.spinner("Đang tạo dữ liệu mẫu..."):
                 sample_data = create_sample_data()
         
         # Calculate time duration
@@ -457,40 +482,40 @@ def main():
         # Display basic info
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            st.metric("Time Duration", time_duration.split(' (')[0])  # Just the years part
+            st.metric("Thời Gian", time_duration.split(' (')[0])  # Just the years part
         with col2:
-            st.metric("Total Days", len(sample_data))
+            st.metric("Tổng Số Ngày", len(sample_data))
         with col3:
-            st.metric("Latest Price", f"{sample_data['close'].iloc[-1]:.2f}")
+            st.metric("Giá Mới Nhất", f"{sample_data['close'].iloc[-1]:.2f}")
         with col4:
             if 'return' in sample_data.columns:
-                st.metric("Price Change %", f"{sample_data['return'].iloc[-1]:.2f}%")
+                st.metric("Thay Đổi Giá %", f"{sample_data['return'].iloc[-1]:.2f}%")
             else:
-                st.metric("Price Change %", "N/A")
+                st.metric("Thay Đổi Giá %", "N/A")
         with col5:
             if 'target' in sample_data.columns:
                 up_days = (sample_data['target'] == 1).sum()
-                st.metric("Up Days %", f"{100 * up_days / len(sample_data):.1f}%")
+                st.metric("% Ngày Tăng", f"{100 * up_days / len(sample_data):.1f}%")
             else:
-                st.metric("Up Days %", "N/A")
+                st.metric("% Ngày Tăng", "N/A")
         
         # Add technical indicators
-        st.markdown('<div class="section-header">🔧 Feature Engineering</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">🔧 Kỹ Thuật Xây Dựng Đặc Trưng</div>', unsafe_allow_html=True)
         
-        with st.spinner("Adding technical indicators..."):
+        with st.spinner("Đang thêm các chỉ báo kỹ thuật..."):
             data_with_features = add_technical_indicators(sample_data)
         
-        st.success(f"✅ Added technical indicators! Shape: {data_with_features.shape}")
+        show_popup_message("Đã thêm thành công các chỉ báo kỹ thuật!", "success")
         
         # Debug: Show what indicators were actually added
-        with st.expander("🔍 Debug: Technical Indicators Status"):
-            st.write("**Available columns after adding technical indicators:**")
+        with st.expander("🔍 Gỡ Lỗi: Trạng Thái Chỉ Báo Kỹ Thuật"):
+            st.write("**Các cột có sẵn sau khi thêm chỉ báo kỹ thuật:**")
             all_cols = list(data_with_features.columns)
             original_cols = list(sample_data.columns)
             new_cols = [col for col in all_cols if col not in original_cols]
             
-            st.write(f"Original columns ({len(original_cols)}): {original_cols}")
-            st.write(f"New technical indicators ({len(new_cols)}): {new_cols}")
+            st.write(f"Cột gốc ({len(original_cols)}): {original_cols}")
+            st.write(f"Chỉ báo kỹ thuật mới ({len(new_cols)}): {new_cols}")
             
             # Check for specific MA indicators
             ma_indicators = [col for col in new_cols if 'ma_' in col.lower()]
@@ -499,65 +524,65 @@ def main():
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.write(f"**MA Indicators:** {ma_indicators}")
+                st.write(f"**Chỉ Báo MA:** {ma_indicators}")
             with col2:
-                st.write(f"**RSI Indicators:** {rsi_indicators}")
+                st.write(f"**Chỉ Báo RSI:** {rsi_indicators}")
             with col3:
-                st.write(f"**Bollinger Bands:** {bb_indicators}")
+                st.write(f"**Dải Bollinger:** {bb_indicators}")
             
             # Show sample of technical indicator values
             if len(new_cols) > 0:
-                st.write("**Sample values (last 5 rows):**")
+                st.write("**Giá trị mẫu (5 dòng cuối):**")
                 sample_tech = data_with_features[new_cols].tail()
                 st.dataframe(sample_tech, use_container_width=True)
         
         # Show feature columns
-        with st.expander("View Technical Indicators"):
+        with st.expander("Xem Các Chỉ Báo Kỹ Thuật"):
             new_features = set(data_with_features.columns) - set(sample_data.columns)
-            st.write("**New technical indicators added:**")
+            st.write("**Chỉ báo kỹ thuật mới được thêm:**")
             for feature in sorted(new_features):
                 st.write(f"• {feature}")
         
         # Visualizations
-        st.markdown('<div class="section-header">📈 Charts & Analysis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">📈 Biểu Đồ & Phân Tích</div>', unsafe_allow_html=True)
         
         # Price chart
-        st.write("**VN30 Index Price Chart with Technical Indicators:**")
+        st.write("**Biểu Đồ Giá Chỉ Số VN30 với Các Chỉ Báo Kỹ Thuật:**")
         price_fig = plot_price_chart(data_with_features)
         st.plotly_chart(price_fig, use_container_width=True)
         
         # Show chart info
-        with st.expander("📊 Chart Information"):
+        with st.expander("📊 Thông Tin Biểu Đồ"):
             available_indicators = []
             ma_cols = [col for col in data_with_features.columns if 'ma_' in col.lower() or 'sma_' in col.lower()]
             bb_cols = [col for col in data_with_features.columns if 'bb_' in col.lower()]
             rsi_cols = [col for col in data_with_features.columns if 'rsi' in col.lower()]
             
             if ma_cols:
-                available_indicators.append(f"Moving Averages: {ma_cols}")
+                available_indicators.append(f"Đường Trung Bình Động: {ma_cols}")
             if bb_cols:
-                available_indicators.append(f"Bollinger Bands: {bb_cols}")
+                available_indicators.append(f"Dải Bollinger: {bb_cols}")
             if rsi_cols:
                 available_indicators.append(f"RSI: {rsi_cols}")
             
             if available_indicators:
-                st.write("**Technical indicators displayed:**")
+                st.write("**Chỉ báo kỹ thuật hiển thị:**")
                 for indicator in available_indicators:
                     st.write(f"• {indicator}")
             else:
-                st.warning("No technical indicators found in the data")
+                st.warning("Không tìm thấy chỉ báo kỹ thuật trong dữ liệu")
         
         # Technical indicators chart
-        st.write("**RSI Technical Indicator:**")
+        st.write("**Chỉ Báo Kỹ Thuật RSI:**")
         rsi_fig = plot_technical_indicators(data_with_features)
         st.plotly_chart(rsi_fig, use_container_width=True)
         
         # Feature engineering demo
-        st.markdown('<div class="section-header">🧠 Advanced Feature Engineering</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">🧠 Kỹ Thuật Xây Dựng Đặc Trưng Nâng Cao</div>', unsafe_allow_html=True)
         
         feature_engineer = FeatureEngineer()
         
-        with st.spinner("Creating additional features..."):
+        with st.spinner("Đang tạo các đặc trưng bổ sung..."):
             # Add more features using the real VN30 data
             enriched_data = feature_engineer.create_price_features(data_with_features)
             enriched_data = feature_engineer.create_volume_features(enriched_data)
@@ -566,36 +591,36 @@ def main():
         
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("Original Features", len(sample_data.columns))
+            st.metric("Đặc Trưng Gốc", len(sample_data.columns))
         with col2:
-            st.metric("Final Features", len(enriched_data.columns))
+            st.metric("Đặc Trưng Cuối Cùng", len(enriched_data.columns))
         
         # Show data sample
-        st.markdown('<div class="section-header">📋 Data Preview</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">📋 Xem Trước Dữ Liệu</div>', unsafe_allow_html=True)
         
-        st.write("**Final dataset preview (Real VN30 Data):**")
+        st.write("**Xem trước bộ dữ liệu cuối cùng (Dữ Liệu VN30 Thực Tế):**")
         st.dataframe(enriched_data.head(), use_container_width=True)
         
         # Additional info about the VN30 data
-        with st.expander("ℹ️ About VN30 Data"):
-            st.write("**Data Source:** Vietnam VN30 Index Historical Data")
-            st.write("**Records:**", len(sample_data))
-            st.write("**Features after enrichment:**", len(enriched_data.columns))
+        with st.expander("ℹ️ Về Dữ Liệu VN30"):
+            st.write("**Nguồn Dữ Liệu:** Dữ Liệu Lịch Sử Chỉ Số VN30 Việt Nam")
+            st.write("**Số Bản Ghi:**", len(sample_data))
+            st.write("**Đặc trưng sau làm giàu:**", len(enriched_data.columns))
         
         # Model demonstration
-        st.markdown('<div class="section-header">🤖 Model Training Demo</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
         
-        if st.button("🚀 Run Model Training Demo", type="primary"):
-            with st.spinner("Preparing data for modeling..."):
+        if st.button("🚀 Chạy Demo Huấn Luyện Mô Hình", type="primary"):
+            with st.spinner("Đang chuẩn bị dữ liệu cho mô hình..."):
                 # Prepare data for modeling
                 # Show data info before cleaning
-                st.info(f"📊 Data before cleaning: {enriched_data.shape}")
-                st.info(f"📊 NaN values: {enriched_data.isnull().sum().sum()}")
+                st.info(f"📊 Dữ liệu trước khi làm sạch: {enriched_data.shape}")
+                st.info(f"📊 Giá trị NaN: {enriched_data.isnull().sum().sum()}")
                 
                 # Remove rows with NaN values, but be more flexible
                 clean_data = enriched_data.dropna()
                 
-                st.info(f"📊 Data after cleaning: {clean_data.shape}")
+                st.info(f"📊 Dữ liệu sau khi làm sạch: {clean_data.shape}")
                 
                 # Lower the threshold for minimum data points
                 min_required_samples = min(20, len(enriched_data) // 4)  # More flexible threshold
@@ -613,14 +638,14 @@ def main():
                     X = clean_data[numeric_features]
                     y = clean_data['target']
                     
-                    st.info(f"📊 Selected {len(numeric_features)} numeric features for modeling")
+                    st.info(f"📊 Đã chọn {len(numeric_features)} đặc trưng số cho mô hình")
                     
                     # Simple train/test split
                     split_idx = max(1, int(0.8 * len(clean_data)))  # Ensure at least 1 sample for test
                     X_train, X_test = X[:split_idx], X[split_idx:]
                     y_train, y_test = y[:split_idx], y[split_idx:]
                     
-                    st.success(f"✅ Data prepared: {len(X_train)} training samples, {len(X_test)} test samples")
+                    show_popup_message(f"Dữ liệu đã được chuẩn bị: {len(X_train)} mẫu huấn luyện, {len(X_test)} mẫu kiểm tra", "success")
                     
                     # Show feature importance simulation
                     np.random.seed(42)
@@ -637,26 +662,26 @@ def main():
                         x='Importance',
                         y='Feature',
                         orientation='h',
-                        title='Simulated Feature Importance'
+                        title='Mức Độ Quan Trọng Đặc Trưng Mô Phỏng'
                     )
                     st.plotly_chart(fig_importance, use_container_width=True)
                     
                     # Simulated model results
-                    st.write("**Simulated Model Performance:**")
+                    st.write("**Hiệu Suất Mô Hình Mô Phỏng:**")
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Accuracy", "75.2%")
+                        st.metric("Độ Chính Xác", "75.2%")
                     with col2:
-                        st.metric("Precision", "73.8%")
+                        st.metric("Độ Chính Xác", "73.8%")
                     with col3:
-                        st.metric("Recall", "76.5%")
+                        st.metric("Độ Nhạy", "76.5%")
                     
                 else:
-                    st.error(f"Not enough clean data for modeling. Need at least {min_required_samples} samples, but only have {len(clean_data)} after cleaning.")
-                    st.error("Try uploading more data or check data quality.")
+                    st.error(f"Không đủ dữ liệu sạch để mô hình hóa. Cần ít nhất {min_required_samples} mẫu, nhưng chỉ có {len(clean_data)} sau khi làm sạch.")
+                    st.error("Hãy thử tải lên nhiều dữ liệu hơn hoặc kiểm tra chất lượng dữ liệu.")
         
         # AI Prediction Section
-        st.markdown('<div class="section-header">🤖 AI-Based Market Prediction</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">🤖 Dự Báo Thị Trường Dựa Trên AI</div>', unsafe_allow_html=True)
         
         if use_ai_prediction:
             with st.spinner("Đang phân tích dữ liệu với AI..."):
@@ -710,37 +735,193 @@ def main():
                 else:
                     st.error(ai_prediction)
         else:
-            st.info("� Click vào button 'Get AI Market Prediction' trong sidebar để nhận được phân tích AI về thị trường")
+            st.info("💡 Nhấp vào nút 'Nhận Dự Báo Thị Trường AI' trong thanh bên để nhận phân tích AI về thị trường")
     
-    else:  # Upload CSV Files
-        st.markdown('<div class="section-header">📁 Upload CSV Files</div>', unsafe_allow_html=True)
+    elif demo_option == "Demo Dự Báo":
+        # Import forecaster here to avoid circular imports
+        from forecast.forecaster import StockForecaster
         
-        st.info("Upload CSV files with stock data. Supports multiple formats including VN30 format.")
+        st.markdown('<div class="section-header">📈 Demo Dự Báo Giá</div>', unsafe_allow_html=True)
         
-        with st.expander("📋 Supported CSV Formats", expanded=False):
-            st.write("**Format 1 - Standard format:**")
-            st.write("Columns: date, open, high, low, close, volume, turnover")
-            st.write("Filename: {STOCK_CODE}_{something}.csv")
+        # Initialize forecaster
+        forecaster = StockForecaster()
+        
+        # Load forecast data
+        with st.spinner("Đang tải dữ liệu dự báo..."):
+            data_loaded = forecaster.load_forecast_data()
+        
+        if not data_loaded:
+            show_popup_message("Không thể tải dữ liệu dự báo. Vui lòng kiểm tra các file dữ liệu.", "error")
+            st.error("❌ Không thể tải dữ liệu dự báo từ Desktop")
+            st.error("Vui lòng đảm bảo các file sau tồn tại trên Desktop:")
+            st.write("- Dữ liệu Lịch sử USD_VND.csv")
+            st.write("- dữ liệu lịch sử giá vàng.csv")
+            return
+        
+        show_popup_message(f"Đã tải {len(forecaster.available_symbols)} bộ dữ liệu dự báo", "success")
+        
+        # Symbol selection
+        selected_symbol = st.selectbox(
+            "Chọn chỉ số để dự báo:",
+            forecaster.available_symbols,
+            help="Chọn USD/VND hoặc Gold để xem dự báo"
+        )
+        
+        # Forecast days selection
+        forecast_days = st.slider(
+            "Số ngày dự báo:",
+            min_value=7,
+            max_value=90,
+            value=30,
+            help="Chọn số ngày bạn muốn dự báo vào tương lai"
+        )
+        
+        if st.button("🔮 Tạo Dự Báo", type="primary"):
+            with st.spinner(f"Đang tạo dự báo cho {selected_symbol}..."):
+                # Create forecast chart
+                forecast_chart = forecaster.create_forecast_chart(
+                    selected_symbol, 
+                    forecast_days=forecast_days,
+                    historical_days=90
+                )
+                
+                if forecast_chart is None:
+                    show_popup_message("Không thể tạo dự báo. Vui lòng thử lại.", "error")
+                    return
+                
+                # Display chart
+                st.plotly_chart(forecast_chart, use_container_width=True)
+                
+                # Get forecast summary
+                summary = forecaster.get_forecast_summary(selected_symbol, forecast_days)
+                
+                if summary:
+                    # Display forecast summary
+                    st.markdown("### 📊 Tóm Tắt Dự Báo")
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Giá Hiện Tại", f"{summary['current_price']:,.0f}")
+                    with col2:
+                        st.metric("Giá Dự Báo", f"{summary['forecast_end_price']:,.0f}")
+                    with col3:
+                        st.metric("Thay Đổi", f"{summary['price_change']:,.0f}")
+                    with col4:
+                        st.metric("Thay Đổi %", f"{summary['price_change_pct']:.1f}%")
+                    
+                    # Investment recommendation
+                    st.markdown("### 💰 Khuyến Nghị Đầu Tư")
+                    
+                    # Create colored background based on trend
+                    if summary['trend_color'] == 'green':
+                        bg_color = "#d4edda"
+                        text_color = "#155724"
+                        border_color = "#c3e6cb"
+                    elif summary['trend_color'] == 'lightgreen':
+                        bg_color = "#d1ecf1"
+                        text_color = "#0c5460"
+                        border_color = "#bee5eb"
+                    elif summary['trend_color'] == 'orange':
+                        bg_color = "#fff3cd"
+                        text_color = "#856404"
+                        border_color = "#ffeaa7"
+                    else:  # red
+                        bg_color = "#f8d7da"
+                        text_color = "#721c24"
+                        border_color = "#f5c6cb"
+                    
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: {bg_color}; 
+                            color: {text_color}; 
+                            padding: 15px; 
+                            border-radius: 10px; 
+                            border-left: 5px solid {border_color};
+                            margin: 10px 0;
+                        ">
+                            <h4 style="margin: 0; color: {text_color};">Xu Hướng: {summary['trend']}</h4>
+                            <p style="margin: 5px 0; color: {text_color};">
+                                <strong>Biến động lịch sử:</strong> {summary['historical_volatility']:.2f}%<br>
+                                <strong>Giá cao nhất dự kiến:</strong> {summary['max_forecast_price']:,.0f}<br>
+                                <strong>Giá thấp nhất dự kiến:</strong> {summary['min_forecast_price']:,.0f}<br>
+                                <strong>Giá trung bình dự kiến:</strong> {summary['avg_forecast_price']:,.0f}
+                            </p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    
+                    # Risk assessment
+                    st.markdown("### ⚠️ Đánh Giá Rủi Ro")
+                    if summary['historical_volatility'] > 5:
+                        risk_level = "Cao"
+                        risk_color = "#dc3545"  # Red
+                        risk_bg_color = "#f8d7da"  # Light red background
+                        risk_border_color = "#f5c6cb"  # Red border
+                    elif summary['historical_volatility'] > 2:
+                        risk_level = "Trung Bình"
+                        risk_color = "#fd7e14"  # Orange
+                        risk_bg_color = "#fff3cd"  # Light orange background
+                        risk_border_color = "#ffeaa7"  # Orange border
+                    else:
+                        risk_level = "Thấp"
+                        risk_color = "#28a745"  # Green
+                        risk_bg_color = "#d4edda"  # Light green background
+                        risk_border_color = "#c3e6cb"  # Green border
+                    
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: {risk_bg_color}; 
+                            color: #495057; 
+                            padding: 15px; 
+                            border-radius: 10px; 
+                            border: 2px solid {risk_border_color};
+                            margin: 10px 0;
+                        ">
+                            <p style="margin: 0;"><strong>Mức độ rủi ro:</strong> <span style="color: {risk_color}; font-weight: bold; font-size: 1.1em;">{risk_level}</span></p>
+                            <p style="margin: 10px 0 0 0; font-size: 0.9em;"><strong>Biến động lịch sử:</strong> {summary['historical_volatility']:.2f}%</p>
+                            <p style="margin: 10px 0 0 0; font-size: 0.9em;"><strong>Lưu ý:</strong> Dự báo dựa trên dữ liệu lịch sử và mô hình toán học. 
+                            Kết quả thực tế có thể khác biệt đáng kể do các yếu tố không lường trước được.</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    
+                    show_popup_message(f"Đã tạo dự báo thành công cho {selected_symbol}", "success")
+                else:
+                    show_popup_message("Không thể tạo tóm tắt dự báo", "warning")
+    
+    elif demo_option == "Tải File CSV":
+        st.markdown('<div class="section-header">📁 Tải File CSV</div>', unsafe_allow_html=True)
+        
+        st.info("Tải file CSV với dữ liệu chứng khoán. Hỗ trợ nhiều định dạng bao gồm định dạng VN30.")
+        
+        with st.expander("📋 Các Định Dạng CSV Được Hỗ Trợ", expanded=False):
+            st.write("**Định dạng 1 - Định dạng chuẩn:**")
+            st.write("Cột: date, open, high, low, close, volume, turnover")
+            st.write("Tên file: {MÃ_CHỨNG_KHOÁN}_{gì_đó}.csv")
             
-            st.write("\n**Format 2 - VN30 format:**")
-            st.write("Columns: Date;Close;Open;High;Low;Volumn;% turnover")
-            st.write("Uses semicolon separator and comma as decimal separator")
+            st.write("\n**Định dạng 2 - Định dạng VN30:**")
+            st.write("Cột: Date;Close;Open;High;Low;Volumn;% turnover")
+            st.write("Sử dụng dấu chấm phẩy làm phân cách và dấu phẩy làm phân cách thập phân")
             
-            st.write("\n**Format 3 - International format:**")
-            st.write("Standard comma-separated format with dot as decimal separator")
+            st.write("\n**Định dạng 3 - Định dạng quốc tế:**")
+            st.write("Định dạng phân cách bằng dấu phẩy chuẩn với dấu chấm làm phân cách thập phân")
         
         uploaded_files = st.file_uploader(
-            "Choose CSV files",
+            "Chọn file CSV",
             accept_multiple_files=True,
             type=['csv'],
-            help="You can upload multiple CSV files. The system will automatically detect the format."
+            help="Bạn có thể tải lên nhiều file CSV. Hệ thống sẽ tự động phát hiện định dạng."
         )
         
         if uploaded_files:
-            st.success(f"✅ Uploaded {len(uploaded_files)} files")
+            show_popup_message(f"Đã tải lên {len(uploaded_files)} file", "success")
             
             # Show uploaded files info
-            with st.expander("📄 Uploaded Files Details"):
+            with st.expander("📄 Chi Tiết File Đã Tải Lên"):
                 for i, uploaded_file in enumerate(uploaded_files, 1):
                     st.write(f"{i}. **{uploaded_file.name}** ({uploaded_file.size:,} bytes)")
             
@@ -757,52 +938,43 @@ def main():
                 with open(os.path.join(temp_dir, uploaded_file.name), "wb") as f:
                     f.write(uploaded_file.getbuffer())
             
-            st.success(f"✅ Files saved to temporary directory: {temp_dir}")
-            
-            # Add reset button
-            if st.button("🗑️ Clear Previous Results", key="clear_results", help="Clear previous processing results"):
-                # Clear session state
-                for key in ['upload_processed', 'uploaded_data', 'uploaded_time_duration', 'uploaded_features']:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                st.success("✅ Previous results cleared!")
-                st.rerun()
+            show_popup_message(f"File đã được lưu vào thư mục tạm: {temp_dir}", "info")
             
             # Add Process button with a unique key
             process_button = st.button(
-                "🔄 Process Uploaded Data", 
+                "🔄 Xử Lý Dữ Liệu Đã Tải Lên", 
                 type="primary", 
                 key="process_uploaded_data_button",
-                help="Click to process your uploaded CSV files and generate analysis"
+                help="Nhấp để xử lý file CSV đã tải lên và tạo phân tích"
             )
             
             if process_button:
-                with st.spinner("Processing uploaded CSV files..."):
+                with st.spinner("Đang xử lý file CSV đã tải lên..."):
                     try:
                         # Step 1: Load and process data
-                        st.info("Step 1: Loading and processing CSV files...")
+                        st.info("Bước 1: Đang tải và xử lý file CSV...")
                         preprocessor = DataPreprocessor()
                         merged_data = preprocessor.load_and_process_all(temp_dir)
                         
                         if merged_data.empty:
-                            st.error("❌ No data could be processed from the uploaded files. Please check the file format.")
+                            show_popup_message("Không thể xử lý dữ liệu từ file đã tải lên. Vui lòng kiểm tra định dạng file.", "error")
                             st.stop()
                         
-                        st.success(f"✅ Successfully processed data! Shape: {merged_data.shape}")
-                        st.info(f"Available columns: {list(merged_data.columns)}")
+                        show_popup_message(f"Đã xử lý thành công dữ liệu! Kích thước: {merged_data.shape}", "success")
+                        st.info(f"Các cột có sẵn: {list(merged_data.columns)}")
                         
                         # Step 2: Calculate time duration
-                        st.info("Step 2: Calculating time duration...")
+                        st.info("Bước 2: Đang tính toán khoảng thời gian...")
                         uploaded_time_duration = calculate_time_duration(merged_data)
-                        st.success(f"✅ Time duration: {uploaded_time_duration}")
+                        show_popup_message(f"Khoảng thời gian: {uploaded_time_duration}", "success")
                         
                         # Validate required columns
                         required_columns = ['close']
                         missing_columns = [col for col in required_columns if col not in merged_data.columns]
                         
                         if missing_columns:
-                            st.error(f"❌ Missing required columns: {missing_columns}")
-                            st.error("Your CSV file must contain at least a 'close' price column.")
+                            show_popup_message(f"Thiếu các cột bắt buộc: {missing_columns}", "error")
+                            st.error("File CSV của bạn phải chứa ít nhất một cột giá 'close'.")
                             st.stop()
                         
                         # Store in session state for persistence
@@ -811,65 +983,65 @@ def main():
                         st.session_state['uploaded_time_duration'] = uploaded_time_duration
                         
                         # Display basic info for uploaded data
-                        st.markdown('<div class="section-header">📊 Uploaded Data Analysis</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Đã Tải Lên</div>', unsafe_allow_html=True)
                         
                         try:
                             col1, col2, col3, col4, col5 = st.columns(5)
                             with col1:
-                                st.metric("Time Duration", uploaded_time_duration.split(' (')[0])
+                                st.metric("Thời Gian", uploaded_time_duration.split(' (')[0])
                             with col2:
-                                st.metric("Total Records", len(merged_data))
+                                st.metric("Tổng Bản Ghi", len(merged_data))
                             with col3:
                                 if 'close' in merged_data.columns:
-                                    st.metric("Latest Price", f"{merged_data['close'].iloc[-1]:.2f}")
+                                    st.metric("Giá Mới Nhất", f"{merged_data['close'].iloc[-1]:.2f}")
                                 else:
-                                    st.metric("Latest Price", "N/A")
+                                    st.metric("Giá Mới Nhất", "N/A")
                             with col4:
                                 if 'return' in merged_data.columns:
                                     latest_return = merged_data['return'].iloc[-1] if not pd.isna(merged_data['return'].iloc[-1]) else 0
-                                    st.metric("Latest Change %", f"{latest_return:.2f}%")
+                                    st.metric("Thay Đổi Mới Nhất %", f"{latest_return:.2f}%")
                                 else:
-                                    st.metric("Latest Change %", "N/A")
+                                    st.metric("Thay Đổi Mới Nhất %", "N/A")
                             with col5:
                                 if 'target' in merged_data.columns:
                                     up_days = (merged_data['target'] == 1).sum()
-                                    st.metric("Up Days %", f"{100 * up_days / len(merged_data):.1f}%")
+                                    st.metric("% Ngày Tăng", f"{100 * up_days / len(merged_data):.1f}%")
                                 else:
-                                    st.metric("Up Days %", "N/A")
+                                    st.metric("% Ngày Tăng", "N/A")
                         except Exception as e:
-                            st.error(f"⚠️ Error displaying metrics: {str(e)}")
+                            st.error(f"⚠️ Lỗi hiển thị số liệu: {str(e)}")
                         
                         # Show data preview
                         try:
-                            with st.expander("📊 Your Data Analysis", expanded=True):
-                                st.write("**Processed data preview (First 10 rows):**")
+                            with st.expander("📊 Phân Tích Dữ Liệu Của Bạn", expanded=True):
+                                st.write("**Xem trước dữ liệu đã xử lý (10 dòng đầu):**")
                                 display_data = merged_data.head(10).copy()
                                 if 'date' in display_data.columns:
                                     display_data['date'] = pd.to_datetime(display_data['date']).dt.strftime('%Y-%m-%d')
                                 st.dataframe(display_data, use_container_width=True)
                         except Exception as e:
-                            st.error(f"⚠️ Error displaying data preview: {str(e)}")
+                            st.error(f"⚠️ Lỗi hiển thị xem trước dữ liệu: {str(e)}")
                         
                         # Add technical indicators
-                        st.markdown('<div class="section-header">🔧 Technical Analysis</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">🔧 Phân Tích Kỹ Thuật</div>', unsafe_allow_html=True)
                         
                         # Validate data has required columns for technical indicators
                         required_ta_columns = ['close', 'code']
                         missing_ta_columns = [col for col in required_ta_columns if col not in merged_data.columns]
                         
                         if missing_ta_columns:
-                            st.warning(f"⚠️ Cannot calculate technical indicators. Missing columns: {missing_ta_columns}")
-                            st.warning("Using original data without technical indicators.")
+                            show_popup_message(f"Không thể tính toán chỉ báo kỹ thuật. Thiếu cột: {missing_ta_columns}", "warning")
+                            st.warning("Sử dụng dữ liệu gốc không có chỉ báo kỹ thuật.")
                             data_with_features = merged_data.copy()
                         else:
                             try:
-                                with st.spinner("Adding technical indicators..."):
+                                with st.spinner("Đang thêm chỉ báo kỹ thuật..."):
                                     data_with_features = add_technical_indicators(merged_data)
                                 
-                                st.success(f"✅ Added technical indicators! Final shape: {data_with_features.shape}")
+                                show_popup_message(f"Đã thêm chỉ báo kỹ thuật! Kích thước cuối: {data_with_features.shape}", "success")
                                 
                                 # Debug: Show what indicators were actually added
-                                with st.expander("🔍 Technical Indicators Details"):
+                                with st.expander("🔍 Chi Tiết Chỉ Báo Kỹ Thuật"):
                                     original_cols = set(merged_data.columns)
                                     new_cols = set(data_with_features.columns) - original_cols
                                     
@@ -880,55 +1052,55 @@ def main():
                                         
                                         col1, col2, col3 = st.columns(3)
                                         with col1:
-                                            st.write(f"**MA Indicators:** {ma_indicators}")
+                                            st.write(f"**Chỉ Báo MA:** {ma_indicators}")
                                         with col2:
-                                            st.write(f"**RSI Indicators:** {rsi_indicators}")
+                                            st.write(f"**Chỉ Báo RSI:** {rsi_indicators}")
                                         with col3:
-                                            st.write(f"**Bollinger Bands:** {bb_indicators}")
+                                            st.write(f"**Dải Bollinger:** {bb_indicators}")
                                     else:
-                                        st.warning("No technical indicators were successfully calculated")
+                                        st.warning("Không có chỉ báo kỹ thuật nào được tính toán thành công")
                             except Exception as e:
-                                st.error(f"⚠️ Error calculating technical indicators: {str(e)}")
-                                st.warning("Using original data without technical indicators.")
+                                show_popup_message(f"Lỗi tính toán chỉ báo kỹ thuật: {str(e)}", "error")
+                                st.warning("Sử dụng dữ liệu gốc không có chỉ báo kỹ thuật.")
                                 data_with_features = merged_data.copy()
                         
                         # Charts
-                        st.markdown('<div class="section-header">📈 Charts & Visualization</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">📈 Biểu Đồ & Hình Ảnh Hóa</div>', unsafe_allow_html=True)
                         
                         # Price chart - with validation
                         try:
-                            st.write("**Price Chart with Technical Indicators:**")
+                            st.write("**Biểu Đồ Giá với Chỉ Báo Kỹ Thuật:**")
                             price_fig = plot_price_chart(data_with_features)
                             st.plotly_chart(price_fig, use_container_width=True)
                         except Exception as e:
-                            st.error(f"⚠️ Error creating price chart: {str(e)}")
-                            st.warning("Skipping price chart display.")
+                            st.error(f"⚠️ Lỗi tạo biểu đồ giá: {str(e)}")
+                            st.warning("Bỏ qua hiển thị biểu đồ giá.")
                         
                         # RSI chart - with validation
                         try:
-                            st.write("**RSI Technical Indicator:**")
+                            st.write("**Chỉ Báo Kỹ Thuật RSI:**")
                             rsi_fig = plot_technical_indicators(data_with_features)
                             st.plotly_chart(rsi_fig, use_container_width=True)
                         except Exception as e:
-                            st.error(f"⚠️ Error creating RSI chart: {str(e)}")
-                            st.warning("Skipping RSI chart display.")
+                            st.error(f"⚠️ Lỗi tạo biểu đồ RSI: {str(e)}")
+                            st.warning("Bỏ qua hiển thị biểu đồ RSI.")
                         
                         # Store processed data in session state for AI prediction
                         try:
                             st.session_state['uploaded_data'] = merged_data
                             st.session_state['uploaded_features'] = data_with_features
                             st.session_state['uploaded_time_duration'] = uploaded_time_duration
-                            st.success("✅ Data stored in session for AI prediction")
+                            show_popup_message("Dữ liệu đã được lưu trong phiên làm việc để dự báo AI", "success")
                         except Exception as e:
-                            st.error(f"⚠️ Error storing data in session: {str(e)}")
+                            st.error(f"⚠️ Lỗi lưu trữ dữ liệu trong phiên làm việc: {str(e)}")
                         
                         # Advanced Feature Engineering
-                        st.markdown('<div class="section-header">🧠 Advanced Feature Engineering</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">🧠 Kỹ Thuật Xây Dựng Đặc Trưng Nâng Cao</div>', unsafe_allow_html=True)
                         
                         try:
                             feature_engineer = FeatureEngineer()
                             
-                            with st.spinner("Creating additional features..."):
+                            with st.spinner("Đang tạo các đặc trưng bổ sung..."):
                                 # Add more features using the uploaded data
                                 enriched_data = feature_engineer.create_price_features(data_with_features)
                                 enriched_data = feature_engineer.create_volume_features(enriched_data)
@@ -937,40 +1109,40 @@ def main():
                             
                             col1, col2 = st.columns(2)
                             with col1:
-                                st.metric("Original Features", len(merged_data.columns))
+                                st.metric("Đặc Trưng Gốc", len(merged_data.columns))
                             with col2:
-                                st.metric("Final Features", len(enriched_data.columns))
+                                st.metric("Đặc Trưng Cuối Cùng", len(enriched_data.columns))
                         except Exception as e:
-                            st.error(f"⚠️ Error in feature engineering: {str(e)}")
-                            st.warning("Using data with technical indicators only.")
+                            st.error(f"⚠️ Lỗi trong kỹ thuật xây dựng đặc trưng: {str(e)}")
+                            st.warning("Sử dụng dữ liệu chỉ với chỉ báo kỹ thuật.")
                             enriched_data = data_with_features.copy()
                             
                             col1, col2 = st.columns(2)
                             with col1:
-                                st.metric("Original Features", len(merged_data.columns))
+                                st.metric("Đặc Trưng Gốc", len(merged_data.columns))
                             with col2:
-                                st.metric("Final Features", len(enriched_data.columns))
+                                st.metric("Đặc Trưng Cuối Cùng", len(enriched_data.columns))
                         
                         # Show final dataset preview
-                        st.markdown('<div class="section-header">📋 Final Dataset Preview</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">📋 Xem Trước Bộ Dữ Liệu Cuối Cùng</div>', unsafe_allow_html=True)
                         
-                        st.write("**Final enriched dataset preview (Your Uploaded Data):**")
+                        st.write("**Xem trước bộ dữ liệu làm giàu cuối cùng (Dữ Liệu Đã Tải Lên Của Bạn):**")
                         st.dataframe(enriched_data.head(), use_container_width=True)
                         
-                        # Model Training Demo
-                        st.markdown('<div class="section-header">🤖 Model Training Demo</div>', unsafe_allow_html=True)
+                        # Model Training Demo - HIDDEN AS REQUESTED
+                        # st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
                         
-                        if st.button("🚀 Run Model Training Demo", type="primary", key="model_training_uploaded"):
-                            with st.spinner("Preparing data for modeling..."):
+                        # if st.button("🚀 Chạy Demo Huấn Luyện Mô Hình", type="primary", key="model_training_uploaded"):
+                            with st.spinner("Đang chuẩn bị dữ liệu cho mô hình..."):
                                 # Prepare data for modeling
                                 # Show data info before cleaning
-                                st.info(f"📊 Data before cleaning: {enriched_data.shape}")
-                                st.info(f"📊 NaN values: {enriched_data.isnull().sum().sum()}")
+                                st.info(f"📊 Dữ liệu trước khi làm sạch: {enriched_data.shape}")
+                                st.info(f"📊 Giá trị NaN: {enriched_data.isnull().sum().sum()}")
                                 
                                 # Remove rows with NaN values, but be more flexible
                                 clean_data = enriched_data.dropna()
                                 
-                                st.info(f"📊 Data after cleaning: {clean_data.shape}")
+                                st.info(f"📊 Dữ liệu sau khi làm sạch: {clean_data.shape}")
                                 
                                 # Lower the threshold for minimum data points
                                 min_required_samples = min(10, len(enriched_data) // 4)  # More flexible threshold
@@ -988,14 +1160,14 @@ def main():
                                     X = clean_data[numeric_features]
                                     y = clean_data['target']
                                     
-                                    st.info(f"📊 Selected {len(numeric_features)} numeric features for modeling")
+                                    st.info(f"📊 Đã chọn {len(numeric_features)} đặc trưng số cho mô hình")
                                     
                                     # Simple train/test split
                                     split_idx = max(1, int(0.8 * len(clean_data)))  # Ensure at least 1 sample for test
                                     X_train, X_test = X[:split_idx], X[split_idx:]
                                     y_train, y_test = y[:split_idx], y[split_idx:]
                                     
-                                    st.success(f"✅ Data prepared: {len(X_train)} training samples, {len(X_test)} test samples")
+                                    show_popup_message(f"Dữ liệu đã được chuẩn bị: {len(X_train)} mẫu huấn luyện, {len(X_test)} mẫu kiểm tra", "success")
                                     
                                     # Show feature importance simulation
                                     np.random.seed(42)
@@ -1012,209 +1184,158 @@ def main():
                                         x='Importance',
                                         y='Feature',
                                         orientation='h',
-                                        title='Simulated Feature Importance for Your Data'
+                                        title='Mức Độ Quan Trọng Đặc Trưng Mô Phỏng cho Dữ Liệu Của Bạn'
                                     )
                                     st.plotly_chart(fig_importance, use_container_width=True)
                                     
                                     # Simulated model results
-                                    st.write("**Simulated Model Performance on Your Data:**")
+                                    st.write("**Hiệu Suất Mô Hình Mô Phỏng trên Dữ Liệu Của Bạn:**")
                                     col1, col2, col3 = st.columns(3)
                                     with col1:
-                                        st.metric("Accuracy", "78.5%")
+                                        st.metric("Độ Chính Xác", "78.5%")
                                     with col2:
-                                        st.metric("Precision", "76.2%")
+                                        st.metric("Độ Chính Xác", "76.2%")
                                     with col3:
-                                        st.metric("Recall", "79.8%")
+                                        st.metric("Độ Nhạy", "79.8%")
                                     
                                 else:
-                                    st.error(f"Not enough clean data for modeling. Need at least {min_required_samples} samples, but only have {len(clean_data)} after cleaning.")
-                                    st.error("Try uploading more data or check data quality.")
-                        
-                        # AI Prediction for uploaded data
-                        st.markdown('<div class="section-header">🤖 AI Analysis for Your Data</div>', unsafe_allow_html=True)
-                        
-                        # Create a dedicated AI prediction button for uploaded data
-                        if st.button("🧠 Get AI Prediction for Your Data", type="primary", key="ai_prediction_uploaded"):
-                            with st.spinner("AI is analyzing your market data..."):
-                                try:
-                                    # Validate that we have the required data
-                                    if 'uploaded_data' not in st.session_state or st.session_state['uploaded_data'].empty:
-                                        st.error("❌ No uploaded data found. Please process your data first.")
-                                        st.stop()
-                                    
-                                    # Get processed data from session state
-                                    processed_data = st.session_state['uploaded_data']
-                                    
-                                    # Validate required columns
-                                    required_columns = ['close']
-                                    missing_columns = [col for col in required_columns if col not in processed_data.columns]
-                                    
-                                    if missing_columns:
-                                        st.error(f"❌ Missing required columns: {missing_columns}")
-                                        st.error("Please ensure your CSV file contains at least a 'close' price column.")
-                                        st.stop()
-                                    
-                                    # Calculate latest return safely
-                                    if 'return' in processed_data.columns and len(processed_data) > 1:
-                                        latest_return = processed_data['return'].iloc[-1] if not pd.isna(processed_data['return'].iloc[-1]) else 0
-                                    else:
-                                        # Calculate manually if return column doesn't exist
-                                        if len(processed_data) >= 2:
-                                            latest_close = processed_data['close'].iloc[-1]
-                                            prev_close = processed_data['close'].iloc[-2]
-                                            latest_return = ((latest_close - prev_close) / prev_close) * 100
-                                        else:
-                                            latest_return = 0
-                                    
-                                    # Get time duration
-                                    uploaded_time_duration = st.session_state.get('uploaded_time_duration', 'Unknown duration')
-                                    
-                                    # Prepare data summary for uploaded data with safe access
-                                    uploaded_summary = {
-                                        'total_days': len(processed_data),
-                                        'time_duration': uploaded_time_duration,
-                                        'current_price': processed_data['close'].iloc[-1] if len(processed_data) > 0 else 0,
-                                        'latest_change': latest_return,
-                                        'up_days_ratio': 100 * (processed_data['target'] == 1).sum() / len(processed_data) if 'target' in processed_data.columns and len(processed_data) > 0 else 50,
-                                        'highest_price': processed_data['close'].max() if len(processed_data) > 0 else 0,
-                                        'lowest_price': processed_data['close'].min() if len(processed_data) > 0 else 0,
-                                        'avg_volatility': abs(processed_data['return']).mean() if 'return' in processed_data.columns and len(processed_data) > 0 else 0
-                                    }
-                                    
-                                    # Use hardcoded API key
-                                    api_key = "AIzaSyDMs-iLWgB7NuoCtJLqEj4SwG3qhM3B-gQ"
-                                    
-                                    # Get AI prediction for uploaded data
-                                    ai_prediction_uploaded = get_gemini_prediction(uploaded_summary, api_key)
-                                    
-                                    # Display prediction with enhanced UI
-                                    st.markdown("---")
-                                    st.markdown("### 🔮 AI Analysis of Your Market Data")
-                                    
-                                    if "Lỗi" not in ai_prediction_uploaded:
-                                        # Create an enhanced display for uploaded data analysis
-                                        with st.container():
-                                            st.success("✅ Your Data Analysis Complete!")
-                                            
-                                            # Show key metrics in columns
-                                            col1, col2, col3, col4 = st.columns(4)
-                                            with col1:
-                                                st.metric("Data Points", f"{uploaded_summary['total_days']:,}")
-                                            with col2:
-                                                if uploaded_summary['current_price'] > 0:
-                                                    st.metric("Current Price", f"{uploaded_summary['current_price']:.2f}")
-                                            with col3:
-                                                st.metric("Latest Change", f"{uploaded_summary['latest_change']:.2f}%")
-                                            with col4:
-                                                st.metric("Up Days Ratio", f"{uploaded_summary['up_days_ratio']:.1f}%")
-                                            
-                                            st.markdown("---")
-                                            
-                                            # Display the AI prediction in a styled container with black background
-                                            st.markdown("#### 📊 Detailed Analysis of Your Data:")
-                                            
-                                            # Create a styled container for the prediction (same as sample demo)
-                                            prediction_container = st.container()
-                                            with prediction_container:
-                                                formatted_response = format_gemini_response(ai_prediction_uploaded)
-                                                st.markdown(
-                                                    f"""
-                                                    <div style='background-color: #000000; color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin: 10px 0;'>
-                                                        {formatted_response}
-                                                    </div>
-                                                    """,
-                                                    unsafe_allow_html=True
-                                                )
-                                            
-                                            # Add future prediction for uploaded data
-                                            st.markdown("#### 🔮 Extended Prediction (Next 10 Years)")
-                                            future_prediction_uploaded = generate_future_prediction(uploaded_summary)
-                                            st.info(future_prediction_uploaded)
-                                            
-                                            # Add disclaimer with prominent styling
-                                            st.markdown("---")
-                                            st.warning(
-                                                "⚠️ **LƯU Ý QUAN TRỌNG:** Đây là phân tích AI dựa trên dữ liệu lịch sử của bạn. "
-                                                "Không được coi là lời khuyên đầu tư. Thị trường chứng khoán có rủi ro cao. "
-                                                "Vui lòng tham khảo ý kiến chuyên gia tài chính trước khi đưa ra quyết định đầu tư."
-                                            )
-                                    else:
-                                        st.error(ai_prediction_uploaded)
-                                
-                                except Exception as e:
-                                    st.error(f"Error processing uploaded data for AI prediction: {str(e)}")
-                                    st.error("Please make sure your data was processed successfully before requesting AI prediction.")
-                        
-                        # Info message when no AI prediction button is pressed yet
-                        else:
-                            st.info("💡 Click the 'Get AI Prediction for Your Data' button above to analyze your uploaded data with AI")
+                                    st.error(f"Không đủ dữ liệu sạch để mô hình hóa. Cần ít nhất {min_required_samples} mẫu, nhưng chỉ có {len(clean_data)} sau khi làm sạch.")
+                                    st.error("Hãy thử tải lên nhiều dữ liệu hơn hoặc kiểm tra chất lượng dữ liệu.")
                         
                     except Exception as e:
-                        st.error(f"Error processing files: {str(e)}")
+                        st.error(f"Lỗi xử lý file: {str(e)}")
+        
+        # AI Prediction for uploaded data - moved outside process_button block
+        if uploaded_files and st.session_state.get('upload_processed', False):
+            st.markdown('<div class="section-header">🤖 Phân Tích AI cho Dữ Liệu Của Bạn</div>', unsafe_allow_html=True)
+            
+            # Check if sidebar AI prediction button was pressed and we have uploaded data
+            if use_ai_prediction and st.session_state.get('upload_processed', False):
+                with st.spinner("AI đang phân tích dữ liệu thị trường của bạn..."):
+                    try:
+                        # Validate that we have the required data
+                        if 'uploaded_data' not in st.session_state or st.session_state['uploaded_data'].empty:
+                            show_popup_message("Không tìm thấy dữ liệu đã tải lên. Vui lòng xử lý dữ liệu của bạn trước.", "error")
+                            st.stop()
                         
-        # Display processed data if available in session state
-        if st.session_state.get('upload_processed', False) and 'uploaded_data' in st.session_state:
-            merged_data = st.session_state['uploaded_data']
-            uploaded_time_duration = st.session_state['uploaded_time_duration']
+                        # Get processed data from session state
+                        processed_data = st.session_state['uploaded_data']
+                        
+                        # Validate required columns
+                        required_columns = ['close']
+                        missing_columns = [col for col in required_columns if col not in processed_data.columns]
+                        
+                        if missing_columns:
+                            show_popup_message(f"Thiếu các cột bắt buộc: {missing_columns}", "error")
+                            st.error("Vui lòng đảm bảo file CSV của bạn chứa ít nhất một cột giá 'close'.")
+                            st.stop()
+                        
+                        # Calculate latest return safely
+                        if 'return' in processed_data.columns and len(processed_data) > 1:
+                            latest_return = processed_data['return'].iloc[-1] if not pd.isna(processed_data['return'].iloc[-1]) else 0
+                        else:
+                            # Calculate manually if return column doesn't exist
+                            if len(processed_data) >= 2:
+                                latest_close = processed_data['close'].iloc[-1]
+                                prev_close = processed_data['close'].iloc[-2]
+                                latest_return = ((latest_close - prev_close) / prev_close) * 100
+                            else:
+                                latest_return = 0
+                        
+                        # Get time duration
+                        uploaded_time_duration = st.session_state.get('uploaded_time_duration', 'Unknown duration')
+                        
+                        # Prepare data summary for uploaded data with safe access
+                        uploaded_summary = {
+                            'total_days': len(processed_data),
+                            'time_duration': uploaded_time_duration,
+                            'current_price': processed_data['close'].iloc[-1] if len(processed_data) > 0 else 0,
+                            'latest_change': latest_return,
+                            'up_days_ratio': 100 * (processed_data['target'] == 1).sum() / len(processed_data) if 'target' in processed_data.columns and len(processed_data) > 0 else 50,
+                            'highest_price': processed_data['close'].max() if len(processed_data) > 0 else 0,
+                            'lowest_price': processed_data['close'].min() if len(processed_data) > 0 else 0,
+                            'avg_volatility': abs(processed_data['return']).mean() if 'return' in processed_data.columns and len(processed_data) > 0 else 0
+                        }
+                        
+                        # Use hardcoded API key
+                        api_key = "AIzaSyDMs-iLWgB7NuoCtJLqEj4SwG3qhM3B-gQ"
+                        
+                        # Get AI prediction for uploaded data
+                        ai_prediction_uploaded = get_gemini_prediction(uploaded_summary, api_key)
+                        
+                        # Display prediction with enhanced UI
+                        st.markdown("---")
+                        st.markdown("### 🔮 Phân Tích AI Dữ Liệu Thị Trường Của Bạn")
+                        
+                        if "Lỗi" not in ai_prediction_uploaded:
+                            # Create an enhanced display for uploaded data analysis
+                            with st.container():
+                                show_popup_message("Phân tích dữ liệu của bạn hoàn tất!", "success")
+                                
+                                # Show key metrics in columns
+                                col1, col2, col3, col4 = st.columns(4)
+                                with col1:
+                                    st.metric("Điểm Dữ Liệu", f"{uploaded_summary['total_days']:,}")
+                                with col2:
+                                    if uploaded_summary['current_price'] > 0:
+                                        st.metric("Giá Hiện Tại", f"{uploaded_summary['current_price']:.2f}")
+                                with col3:
+                                    st.metric("Thay Đổi Mới Nhất", f"{uploaded_summary['latest_change']:.2f}%")
+                                with col4:
+                                    st.metric("Tỷ Lệ Ngày Tăng", f"{uploaded_summary['up_days_ratio']:.1f}%")
+                                
+                                st.markdown("---")
+                                
+                                # Display the AI prediction in a styled container with black background
+                                st.markdown("#### 📊 Phân Tích Chi Tiết Dữ Liệu Của Bạn:")
+                                
+                                # Create a styled container for the prediction (same as sample demo)
+                                prediction_container = st.container()
+                                with prediction_container:
+                                    formatted_response = format_gemini_response(ai_prediction_uploaded)
+                                    st.markdown(
+                                        f"""
+                                        <div style='background-color: #000000; color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin: 10px 0;'>
+                                            {formatted_response}
+                                        </div>
+                                        """,
+                                        unsafe_allow_html=True
+                                    )
+                                
+                                # Add future prediction for uploaded data
+                                st.markdown("#### 🔮 Dự Báo Mở Rộng (10 Năm Tiếp Theo)")
+                                future_prediction_uploaded = generate_future_prediction(uploaded_summary)
+                                st.info(future_prediction_uploaded)
+                                
+                                # Add disclaimer with prominent styling
+                                st.markdown("---")
+                                st.warning(
+                                    "⚠️ **LƯU Ý QUAN TRỌNG:** Đây là phân tích AI dựa trên dữ liệu lịch sử của bạn. "
+                                    "Không được coi là lời khuyên đầu tư. Thị trường chứng khoán có rủi ro cao. "
+                                    "Vui lòng tham khảo ý kiến chuyên gia tài chính trước khi đưa ra quyết định đầu tư."
+                                )
+                        else:
+                            st.error(ai_prediction_uploaded)
+                    
+                    except Exception as e:
+                        st.error(f"Lỗi xử lý dữ liệu đã tải lên cho dự báo AI: {str(e)}")
+                        st.error("Vui lòng đảm bảo dữ liệu của bạn đã được xử lý thành công trước khi yêu cầu dự báo AI.")
             
-            st.success("✅ Data processing completed! Here are your results:")
-            
-            # Display basic info for uploaded data
-            st.markdown('<div class="section-header">📊 Uploaded Data Analysis</div>', unsafe_allow_html=True)
-            
-            try:
-                col1, col2, col3, col4, col5 = st.columns(5)
-                with col1:
-                    st.metric("Time Duration", uploaded_time_duration.split(' (')[0])
-                with col2:
-                    st.metric("Total Records", len(merged_data))
-                with col3:
-                    if 'close' in merged_data.columns:
-                        st.metric("Latest Price", f"{merged_data['close'].iloc[-1]:.2f}")
-                    else:
-                        st.metric("Latest Price", "N/A")
-                with col4:
-                    if 'return' in merged_data.columns:
-                        latest_return = merged_data['return'].iloc[-1] if not pd.isna(merged_data['return'].iloc[-1]) else 0
-                        st.metric("Latest Change %", f"{latest_return:.2f}%")
-                    else:
-                        st.metric("Latest Change %", "N/A")
-                with col5:
-                    if 'target' in merged_data.columns:
-                        up_days = (merged_data['target'] == 1).sum()
-                        st.metric("Up Days %", f"{100 * up_days / len(merged_data):.1f}%")
-                    else:
-                        st.metric("Up Days %", "N/A")
-            except Exception as e:
-                st.error(f"⚠️ Error displaying metrics: {str(e)}")
-            
-            # Show data preview
-            try:
-                with st.expander("📊 Your Data Analysis", expanded=True):
-                    st.write("**Processed data preview (First 10 rows):**")
-                    display_data = merged_data.head(10).copy()
-                    if 'date' in display_data.columns:
-                        display_data['date'] = pd.to_datetime(display_data['date']).dt.strftime('%Y-%m-%d')
-                    st.dataframe(display_data, use_container_width=True)
-            except Exception as e:
-                st.error(f"⚠️ Error displaying data preview: {str(e)}")
-            
-            # Add technical indicators
-            st.markdown('<div class="section-header">🔧 Technical Analysis</div>', unsafe_allow_html=True)
-            
-            # ... rest of the processing will be added here...
+            # Info message when no AI prediction button is pressed yet
+            else:
+                st.info("💡 Nhấp vào nút 'Nhận Dự Báo Thị Trường AI' trong thanh bên để phân tích dữ liệu đã tải lên với AI")
         
         # If no files uploaded yet, show info
         else:
-            st.info("📁 Please upload CSV files to begin analysis")
+            st.info("📁 Vui lòng tải lên file CSV để bắt đầu phân tích")
     
     # Footer
     st.markdown("---")
     st.markdown(
         """
         <div style="text-align: center; color: #666;">
-            <p>📊 Stock Market Prediction Demo</p>
-            
+            <p>📊 Hệ Thống Dự Báo Thị Trường Chứng Khoán</p>
+            <p>Được phát triển với Machine Learning và AI</p>
         </div>
         """,
         unsafe_allow_html=True
