@@ -1,0 +1,4 @@
+horizon,base_date,future_date,last_price,predicted_price,predicted_change,predicted_return_pct
+1_days,2025-07-30,2025-07-31,1630.78,1467.43,-163.35,-10.02
+5_days,2025-07-30,2025-08-06,1630.78,1458.99,-171.79,-10.53
+10_days,2025-07-30,2025-08-13,1630.78,1486.13,-144.65,-8.87

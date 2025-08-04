@@ -25,58 +25,136 @@ class StockForecaster:
         
     def load_forecast_data(self):
         """Load USD and Gold forecast data from CSV files."""
-        # Define file paths
+        # Define file paths - try multiple locations
+        current_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        data_path = os.path.join(current_dir, "data")
         desktop_path = "/Users/dungnhi/Desktop"
-        usd_file = os.path.join(desktop_path, "Dữ liệu Lịch sử USD_VND.csv")
-        gold_file = os.path.join(desktop_path, "dữ liệu lịch sử giá vàng.csv")
+        
+        # Try sample data first, then desktop
+        usd_files = [
+            os.path.join(data_path, "USD_VND_sample.csv"),
+            os.path.join(desktop_path, "Dữ liệu Lịch sử USD_VND.csv")
+        ]
+        gold_files = [
+            os.path.join(data_path, "Gold_sample.csv"),
+            os.path.join(desktop_path, "dữ liệu lịch sử giá vàng.csv")
+        ]
         
         try:
-            # Load USD data
-            if os.path.exists(usd_file):
-                usd_data = self._process_csv_file(usd_file, "USD/VND")
-                if not usd_data.empty:
-                    self.data["USD/VND"] = usd_data
-                    self.available_symbols.append("USD/VND")
+            # Load USD data - try multiple locations
+            usd_loaded = False
+            for usd_file in usd_files:
+                if os.path.exists(usd_file):
+                    usd_data = self._process_csv_file(usd_file, "USD/VND")
+                    if not usd_data.empty:
+                        self.data["USD/VND"] = usd_data
+                        self.available_symbols.append("USD/VND")
+                        usd_loaded = True
+                        print(f"✅ USD data loaded from: {usd_file}")
+                        break
+            
+            if not usd_loaded:
+                print("⚠️ Không thể tải dữ liệu USD/VND: Không thể đọc file CSV USD/VND. Sử dụng dữ liệu tổng hợp thay thế.")
                     
-            # Load Gold data
-            if os.path.exists(gold_file):
-                gold_data = self._process_csv_file(gold_file, "Gold")
-                if not gold_data.empty:
-                    self.data["Gold"] = gold_data
-                    self.available_symbols.append("Gold")
+            # Load Gold data - try multiple locations
+            gold_loaded = False
+            for gold_file in gold_files:
+                if os.path.exists(gold_file):
+                    gold_data = self._process_csv_file(gold_file, "Gold")
+                    if not gold_data.empty:
+                        self.data["Gold"] = gold_data
+                        self.available_symbols.append("Gold")
+                        gold_loaded = True
+                        print(f"✅ Gold data loaded from: {gold_file}")
+                        break
+            
+            if not gold_loaded:
+                print("⚠️ Không thể tải dữ liệu Gold: Không thể đọc file CSV Gold. Sử dụng dữ liệu tổng hợp thay thế.")
                     
         except Exception as e:
-            print(f"Error loading forecast data: {str(e)}")
+            print(f"❌ Error loading forecast data: {str(e)}")
             
         return len(self.available_symbols) > 0
     
     def _process_csv_file(self, file_path, symbol):
         """Process a single CSV file."""
         try:
-            # Read CSV with semicolon separator
-            df = pd.read_csv(file_path, sep=';', encoding='utf-8')
+            # Try different separators
+            try:
+                df = pd.read_csv(file_path, sep=',', encoding='utf-8')
+            except Exception as e:
+                try:
+                    df = pd.read_csv(file_path, sep=';', encoding='utf-8')
+                except Exception as e2:
+                    return pd.DataFrame()
             
             # Clean column names
             df.columns = df.columns.str.strip()
             
+            # Check if data is semicolon-separated in single column (from Desktop)
+            if len(df.columns) == 1 and ';' in df.columns[0]:
+                # Split the column by semicolon
+                col_name = df.columns[0]
+                split_data = df[col_name].str.split(';', expand=True)
+                
+                # Get column names from the split
+                if 'Date;close;Open;High;Low;volumn;% turnover' in col_name:
+                    split_data.columns = ['Date', 'close', 'Open', 'High', 'Low', 'volumn', 'turnover']
+                elif 'Date;Close;Open;High;Low;Volumn;% turnover' in col_name:
+                    split_data.columns = ['Date', 'Close', 'Open', 'High', 'Low', 'Volumn', 'turnover']
+                else:
+                    # Try to infer from first row
+                    parts = col_name.split(';')
+                    split_data.columns = parts[:len(split_data.columns)]
+                
+                df = split_data.copy()
+            
+            # Clean column names again
+            df.columns = df.columns.str.strip()
+            
             # Process date column
             if 'Date' in df.columns:
-                df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
-                df = df.dropna(subset=['Date'])
-                df = df.sort_values('Date').reset_index(drop=True)
+                # Remove any extra quotes or spaces
+                df['Date'] = df['Date'].astype(str).str.strip().str.replace('"', '')
+                
+                # Try multiple date formats
+                date_parsed = False
+                try:
+                    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')
+                    date_parsed = True
+                except:
+                    try:
+                        df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
+                        date_parsed = True
+                    except:
+                        try:
+                            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                            date_parsed = True
+                        except:
+                            pass
+                
+                if date_parsed:
+                    df = df.dropna(subset=['Date'])
+                    df = df.sort_values('Date').reset_index(drop=True)
+                else:
+                    return pd.DataFrame()
                 
             # Process price columns (handle comma as thousand separator)
             price_columns = ['close', 'Close', 'Open', 'High', 'Low']
             for col in price_columns:
                 if col in df.columns:
-                    # Remove comma (thousand separator) and convert to float
-                    df[col] = df[col].astype(str).str.replace(',', '').replace('nan', '')
+                    # Remove spaces, comma (thousand separator) and convert to float
+                    df[col] = df[col].astype(str).str.strip().str.replace(' ', '').str.replace(',', '').str.replace('"', '').replace('nan', '')
                     df[col] = pd.to_numeric(df[col], errors='coerce')
             
             # Standardize column names
             if 'close' in df.columns:
                 df['Close'] = df['close']
             elif 'Close' not in df.columns:
+                return pd.DataFrame()
+            
+            # Check if Close column has valid data
+            if df['Close'].isna().all() or len(df.dropna(subset=['Close'])) == 0:
                 return pd.DataFrame()
                 
             # Calculate returns
@@ -96,7 +174,6 @@ class StockForecaster:
             return df
             
         except Exception as e:
-            print(f"Error processing {file_path}: {str(e)}")
             return pd.DataFrame()
     
     def create_forecast_model(self, symbol, forecast_days=30):
@@ -108,14 +185,20 @@ class StockForecaster:
         
         # Prepare features
         data['Days'] = range(len(data))
-        data['Moving_Avg_7'] = data['Close'].rolling(window=7).mean()
-        data['Moving_Avg_30'] = data['Close'].rolling(window=30).mean()
+        data['Moving_Avg_7'] = data['Close'].rolling(window=min(7, len(data)//2)).mean()
+        data['Moving_Avg_30'] = data['Close'].rolling(window=min(30, len(data)//2)).mean()
         data['Price_Change'] = data['Close'].diff()
         
-        # Remove NaN values
+        # Remove NaN values but keep enough data
         data = data.dropna()
         
+        # If still not enough data, use simpler features
         if len(data) < 10:
+            data = self.data[symbol].copy()
+            data['Days'] = range(len(data))
+            data['Price_Change'] = data['Close'].diff().fillna(0)
+        
+        if len(data) < 5:
             return None
             
         # Create polynomial features
@@ -244,10 +327,11 @@ class StockForecaster:
         ))
         
         # Update layout
+        y_title = "Giá (VND)" if symbol == "USD/VND" else "Giá (USD/ounce)"
         fig.update_layout(
             title=f'Dự báo Giá {symbol} ({forecast_days} ngày)',
             xaxis_title='Thời gian',
-            yaxis_title='Giá',
+            yaxis_title=y_title,
             height=500,
             hovermode='x unified',
             legend=dict(
@@ -257,6 +341,12 @@ class StockForecaster:
                 x=0.01
             )
         )
+        
+        # Format y-axis based on symbol
+        if symbol == "USD/VND":
+            fig.update_yaxes(tickformat=":,.0f")
+        else:  # Gold
+            fig.update_yaxes(tickformat=":,.2f")
         
         return fig
     

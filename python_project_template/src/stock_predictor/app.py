@@ -335,6 +335,34 @@ def calculate_time_duration(data):
         years = len(data) / 365.25
         return f"~{years:.1f} năm ({len(data)} điểm dữ liệu)"
 
+def test_gemini_api_key(api_key):
+    """
+    Kiểm tra API key Gemini có hợp lệ không
+    """
+    try:
+        if not api_key or len(api_key) < 20:
+            return False, "API key quá ngắn hoặc trống"
+            
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Test với prompt đơn giản
+        response = model.generate_content("Xin chào")
+        
+        if response and response.text:
+            return True, "API key hợp lệ"
+        else:
+            return False, "Không nhận được response từ API"
+            
+    except Exception as e:
+        error_msg = str(e)
+        if "API key" in error_msg:
+            return False, "API key không hợp lệ"
+        elif "quota" in error_msg.lower():
+            return False, "Đã vượt quá giới hạn sử dụng"
+        else:
+            return False, f"Lỗi kết nối: {error_msg}"
+
 def get_gemini_prediction(data_summary, api_key):
     """Get AI-based market prediction using Gemini Pro."""
     try:
@@ -391,6 +419,78 @@ def format_gemini_response(response_text):
     
     return '\n\n'.join(formatted_sections)
 
+def get_gemini_investment_recommendation(stock_code, forecast_data, api_key):
+    """
+    Tạo khuyến nghị đầu tư từ AI Gemini dựa trên dữ liệu dự báo cổ phiếu
+    """
+    try:
+        genai.configure(api_key=api_key)
+        # Sử dụng model mới hơn thay thế gemini-pro đã deprecated
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Chuẩn bị dữ liệu cho AI
+        current_price = forecast_data['last_price'].iloc[0]
+        avg_return = forecast_data['predicted_return'].mean()
+        volatility = forecast_data['predicted_return'].std()
+        min_return = forecast_data['predicted_return'].min()
+        max_return = forecast_data['predicted_return'].max()
+        
+        # Dữ liệu dự báo theo từng kỳ hạn
+        forecast_summary = ""
+        for _, row in forecast_data.iterrows():
+            forecast_summary += f"- {row['horizon']}: Lợi nhuận {row['predicted_return']:.2f}%, Giá dự báo {row['predicted_price'] * 1000:,.0f} VND\n"
+        
+        prompt = f"""
+Bạn là một chuyên gia phân tích tài chính với 20 năm kinh nghiệm. Hãy phân tích và đưa ra khuyến nghị đầu tư cho cổ phiếu {stock_code} dựa trên dữ liệu dự báo sau:
+
+**THÔNG TIN CỔ PHIẾU:**
+- Mã cổ phiếu: {stock_code}
+- Giá hiện tại: {current_price * 1000:,.0f} VND/cổ phiếu
+- Lợi nhuận trung bình dự báo: {avg_return:.2f}%
+- Độ biến động (volatility): {volatility:.2f}%
+- Lợi nhuận tối thiểu: {min_return:.2f}%
+- Lợi nhuận tối đa: {max_return:.2f}%
+
+**DỰ BÁO CHI TIẾT:**
+{forecast_summary}
+
+Hãy đưa ra khuyến nghị đầu tư chi tiết bao gồm:
+
+1. **KHUYẾN NGHỊ CHÍNH** (MUA/GIỮ/BÁN và mức độ)
+2. **PHÂN TÍCH RỦI RO** (Thấp/Trung bình/Cao và lý do)
+3. **CHIẾN LƯỢC ĐẦU TƯ** (Ngắn hạn/Dài hạn)
+4. **ĐIỂM VÀO/RA** (Mức giá phù hợp theo format: X.XXX VND/cổ phiếu)
+5. **LƯU Ý QUAN TRỌNG** (Các yếu tố cần theo dõi)
+
+Phân tích phải:
+- Dựa trên số liệu cụ thể
+- Xem xét xu hướng thị trường Việt Nam
+- Đưa ra lời khuyên thực tế và điểm vào/ra cụ thể
+- Nhấn mạnh yếu tố rủi ro
+- Sử dụng format giá chuẩn: X.XXX VND/cổ phiếu (ví dụ: 25.000 VND/cổ phiếu)
+
+Trả lời bằng tiếng Việt, ngắn gọn nhưng đầy đủ thông tin (khoảng 300-400 từ).
+"""
+        
+        response = model.generate_content(prompt)
+        
+        # Kiểm tra response có hợp lệ không
+        if response and response.text:
+            return response.text
+        else:
+            return "Không thể tạo khuyến nghị từ AI. Vui lòng thử lại."
+        
+    except Exception as e:
+        error_msg = str(e)
+        if "API key" in error_msg:
+            return "Lỗi: API key không hợp lệ. Vui lòng kiểm tra lại Gemini API key."
+        elif "quota" in error_msg.lower():
+            return "Lỗi: Đã vượt quá giới hạn sử dụng API. Vui lòng thử lại sau."
+        elif "model" in error_msg.lower():
+            return "Lỗi: Model AI không khả dụng. Vui lòng thử lại sau."
+        else:
+            return f"Lỗi khi tạo khuyến nghị AI: {error_msg}"
+
 def main():
     """Main application function."""
     
@@ -409,6 +509,16 @@ def main():
     
     # AI Prediction Button - only show if we have data
     st.sidebar.markdown("### 🤖 Dự Báo AI")
+    
+    # Hidden API Key Configuration - không hiển thị trên UI
+    # Get API key from session state or use default
+    default_api_key = "AIzaSyDMs-iLWgB7NuoCtJLqEj4SwG3qhM3B-gQ"
+    
+    if 'gemini_api_key' not in st.session_state:
+        st.session_state.gemini_api_key = default_api_key
+    
+    # Sử dụng API key mặc định mà không hiển thị trên UI
+    gemini_api_key = st.session_state.gemini_api_key
     
     # Check if we have any data available for AI prediction
     has_sample_data = demo_option == "Demo Dữ Liệu Mẫu"
@@ -444,7 +554,11 @@ def main():
         st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Mẫu</div>', unsafe_allow_html=True)
         
         # Load real VN30 data instead of synthetic data
-        vn30_file_path = "/Users/dungnhi/Documents/HTRaQuyetDinh/VN30_demo.csv"
+        # Get absolute path to data folder
+        current_file = os.path.abspath(__file__)
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+        data_path = os.path.join(project_root, "data")
+        vn30_file_path = os.path.join(data_path, "VN30_demo.csv")
         
         try:
             with st.spinner("Đang tải dữ liệu VN30..."):
@@ -483,7 +597,7 @@ def main():
             show_popup_message("Đang sử dụng dữ liệu chỉ số VN30 thực tế", "info")
             
         except Exception as e:
-            show_popup_message(f"Không thể tải dữ liệu VN30: {str(e)}. Sử dụng dữ liệu tổng hợp thay thế.", "warning")
+            show_popup_message("⚠️ Không thể tải dữ liệu VN30: Không thể đọc file CSV VN30. Sử dụng dữ liệu tổng hợp thay thế.", "warning")
             # Fallback to synthetic data
             with st.spinner("Đang tạo dữ liệu mẫu..."):
                 sample_data = create_sample_data()
@@ -708,7 +822,8 @@ def main():
                     'lowest_price': sample_data['close'].min(),
                     'avg_volatility': abs(sample_data['return']).mean()
                 }
-                api_key = "AIzaSyDMs-iLWgB7NuoCtJLqEj4SwG3qhM3B-gQ"
+                # Sử dụng API key từ session state
+                api_key = st.session_state.gemini_api_key
                 ai_prediction = get_gemini_prediction(data_summary, api_key)
                 st.markdown("---")
                 st.markdown("### 🔮 AI Market Analysis & Prediction")
@@ -719,17 +834,19 @@ def main():
                         with col1:
                             st.metric("Số ngày phân tích", f"{data_summary['total_days']:,}")
                         with col2:
-                            st.metric("Giá hiện tại", f"{data_summary['current_price']:.2f}")
+                            st.metric("Giá hiện tại", f"{data_summary['current_price']:,.0f} VND/cổ phiếu")
                         with col3:
                             st.metric("Thay đổi gần nhất", f"{data_summary['latest_change']:.2f}%")
                         with col4:
                             st.metric("Tỷ lệ ngày tăng", f"{data_summary['up_days_ratio']:.1f}%")
                         st.markdown("---")
-                        st.markdown("#### � Dự báo chi tiết:")
-                        formatted_response = format_gemini_response(ai_prediction)
+                        st.markdown("#### 🤖 Dự báo chi tiết:")
+                        # Clean the response to avoid HTML conflicts
+                        clean_response = ai_prediction.replace('<', '&lt;').replace('>', '&gt;')
+                        formatted_response = format_gemini_response(clean_response)
                         st.markdown(
                             f"""
-                            <div style='background-color: #000000; color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin: 10px 0;'>
+                            <div style='background-color: #000000; color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin: 10px 0; white-space: pre-line;'>
                                 {formatted_response}
                             </div>
                             """,
@@ -755,155 +872,536 @@ def main():
         
         st.markdown('<div class="section-header">📈 Demo Dự Báo Giá</div>', unsafe_allow_html=True)
         
-        # Initialize forecaster
-        forecaster = StockForecaster()
+        # Add tab for different forecast types
+        forecast_tab1, forecast_tab2 = st.tabs(["🔮 Dự Báo USD/VND & Vàng", "📊 Dự Báo Cổ Phiếu VN30"])
         
-        # Load forecast data
-        with st.spinner("Đang tải dữ liệu dự báo..."):
-            data_loaded = forecaster.load_forecast_data()
+        with forecast_tab1:
+            # Initialize forecaster
+            forecaster = StockForecaster()
+            
+            # Load forecast data
+            with st.spinner("Đang tải dữ liệu dự báo..."):
+                data_loaded = forecaster.load_forecast_data()
+            
+            if not data_loaded:
+                show_popup_message("Không thể tải dữ liệu dự báo. Vui lòng kiểm tra các file dữ liệu.", "error")
+                st.error("❌ Không thể tải dữ liệu dự báo từ Desktop")
+                st.error("Vui lòng đảm bảo các file sau tồn tại trên Desktop:")
+                st.write("- Dữ liệu Lịch sử USD_VND.csv")
+                st.write("- dữ liệu lịch sử giá vàng.csv")
+                return
+            
+            show_popup_message(f"Đã tải {len(forecaster.available_symbols)} bộ dữ liệu dự báo", "success")
+            
+            # Symbol selection
+            selected_symbol = st.selectbox(
+                "Chọn chỉ số để dự báo:",
+                forecaster.available_symbols,
+                help="Chọn USD/VND hoặc Gold để xem dự báo"
+            )
+            
+            # Forecast days selection
+            forecast_days = st.slider(
+                "Số ngày dự báo:",
+                min_value=7,
+                max_value=90,
+                value=30,
+                help="Chọn số ngày bạn muốn dự báo vào tương lai"
+            )
+            
+            if st.button("🔮 Tạo Dự Báo", type="primary"):
+                with st.spinner(f"Đang tạo dự báo cho {selected_symbol}..."):
+                    # Create forecast chart
+                    forecast_chart = forecaster.create_forecast_chart(
+                        selected_symbol, 
+                        forecast_days=forecast_days,
+                        historical_days=90
+                    )
+                    
+                    if forecast_chart is None:
+                        show_popup_message("Không thể tạo dự báo. Vui lòng thử lại.", "error")
+                        return
+                    
+                    # Display chart
+                    st.plotly_chart(forecast_chart, use_container_width=True)
+                    
+                    # Get forecast summary
+                    summary = forecaster.get_forecast_summary(selected_symbol, forecast_days)
+                    
+                    if summary:
+                        # Display forecast summary
+                        st.markdown("### 📊 Tóm Tắt Dự Báo")
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            if selected_symbol == "USD/VND":
+                                st.metric("Giá Hiện Tại", f"{summary['current_price']:,.0f} VND")
+                            else:  # Gold
+                                st.metric("Giá Hiện Tại", f"{summary['current_price']:,.2f} USD/ounce")
+                        with col2:
+                            if selected_symbol == "USD/VND":
+                                st.metric("Giá Dự Báo", f"{summary['forecast_end_price']:,.0f} VND")
+                            else:  # Gold
+                                st.metric("Giá Dự Báo", f"{summary['forecast_end_price']:,.2f} USD/ounce")
+                        with col3:
+                            if selected_symbol == "USD/VND":
+                                st.metric("Thay Đổi", f"{summary['price_change']:,.0f} VND")
+                            else:  # Gold
+                                st.metric("Thay Đổi", f"{summary['price_change']:,.2f} USD")
+                        with col4:
+                            st.metric("Thay Đổi %", f"{summary['price_change_pct']:.1f}%")
+                        
+                        # Investment recommendation
+                        st.markdown("### 💰 Khuyến Nghị Đầu Tư")
+                        
+                        # Create colored background based on trend
+                        if summary['trend_color'] == 'green':
+                            bg_color = "#d4edda"
+                            text_color = "#155724"
+                            border_color = "#c3e6cb"
+                        elif summary['trend_color'] == 'lightgreen':
+                            bg_color = "#d1ecf1"
+                            text_color = "#0c5460"
+                            border_color = "#bee5eb"
+                        elif summary['trend_color'] == 'orange':
+                            bg_color = "#fff3cd"
+                            text_color = "#856404"
+                            border_color = "#ffeaa7"
+                        else:  # red
+                            bg_color = "#f8d7da"
+                            text_color = "#721c24"
+                            border_color = "#f5c6cb"
+                        
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background-color: {bg_color}; 
+                                color: {text_color}; 
+                                padding: 15px; 
+                                border-radius: 10px; 
+                                border-left: 5px solid {border_color};
+                                margin: 10px 0;
+                            ">
+                                <h4 style="margin: 0; color: {text_color};">Xu Hướng: {summary['trend']}</h4>
+                                <p style="margin: 5px 0; color: {text_color};">
+                                    <strong>Biến động lịch sử:</strong> {summary['historical_volatility']:.2f}%<br>
+                                    <strong>Giá cao nhất dự kiến:</strong> {summary['max_forecast_price']:,.0f} {"VND" if selected_symbol == "USD/VND" else "USD/ounce"}<br>
+                                    <strong>Giá thấp nhất dự kiến:</strong> {summary['min_forecast_price']:,.0f} {"VND" if selected_symbol == "USD/VND" else "USD/ounce"}<br>
+                                    <strong>Giá trung bình dự kiến:</strong> {summary['avg_forecast_price']:,.0f} {"VND" if selected_symbol == "USD/VND" else "USD/ounce"}
+                                </p>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                        
+                        # Risk assessment
+                        st.markdown("### ⚠️ Đánh Giá Rủi Ro")
+                        
+                        if summary['historical_volatility'] > 5:
+                            risk_level = "Cao"
+                            risk_color = "#dc3545"  # Red
+                            risk_bg_color = "#f8d7da"  # Light red background
+                            risk_border_color = "#f5c6cb"  # Red border
+                        elif summary['historical_volatility'] > 2:
+                            risk_level = "Trung Bình"
+                            risk_color = "#fd7e14"  # Orange
+                            risk_bg_color = "#fff3cd"  # Light orange background
+                            risk_border_color = "#ffeaa7"  # Orange border
+                        else:
+                            risk_level = "Thấp"
+                            risk_color = "#28a745"  # Green
+                            risk_bg_color = "#d4edda"  # Light green background
+                            risk_border_color = "#c3e6cb"  # Green border
+                        
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background-color: {risk_bg_color}; 
+                                color: #495057; 
+                                padding: 15px; 
+                                border-radius: 10px; 
+                                border: 2px solid {risk_border_color};
+                                margin: 10px 0;
+                            ">
+                                <p style="margin: 0;"><strong>Mức độ rủi ro:</strong> <span style="color: {risk_color}; font-weight: bold; font-size: 1.1em;">{risk_level}</span></p>
+                                <p style="margin: 10px 0 0 0; font-size: 0.9em;"><strong>Biến động lịch sử:</strong> {summary['historical_volatility']:.2f}%</p>
+                                <p style="margin: 10px 0 0 0; font-size: 0.9em;"><strong>Lưu ý:</strong> Dự báo dựa trên dữ liệu lịch sử và mô hình toán học. 
+                                Kết quả thực tế có thể khác biệt đáng kể do các yếu tố không lường trước được.</p>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                        
+                        show_popup_message(f"Đã tạo dự báo thành công cho {selected_symbol}", "success")
+                    else:
+                        show_popup_message("Không thể tạo tóm tắt dự báo", "warning")
         
-        if not data_loaded:
-            show_popup_message("Không thể tải dữ liệu dự báo. Vui lòng kiểm tra các file dữ liệu.", "error")
-            st.error("❌ Không thể tải dữ liệu dự báo từ Desktop")
-            st.error("Vui lòng đảm bảo các file sau tồn tại trên Desktop:")
-            st.write("- Dữ liệu Lịch sử USD_VND.csv")
-            st.write("- dữ liệu lịch sử giá vàng.csv")
-            return
-        
-        show_popup_message(f"Đã tải {len(forecaster.available_symbols)} bộ dữ liệu dự báo", "success")
-        
-        # Symbol selection
-        selected_symbol = st.selectbox(
-            "Chọn chỉ số để dự báo:",
-            forecaster.available_symbols,
-            help="Chọn USD/VND hoặc Gold để xem dự báo"
-        )
-        
-        # Forecast days selection
-        forecast_days = st.slider(
-            "Số ngày dự báo:",
-            min_value=7,
-            max_value=90,
-            value=30,
-            help="Chọn số ngày bạn muốn dự báo vào tương lai"
-        )
-        
-        if st.button("🔮 Tạo Dự Báo", type="primary"):
-            with st.spinner(f"Đang tạo dự báo cho {selected_symbol}..."):
-                # Create forecast chart
-                forecast_chart = forecaster.create_forecast_chart(
-                    selected_symbol, 
-                    forecast_days=forecast_days,
-                    historical_days=90
+        with forecast_tab2:
+            st.markdown("### 📊 Dự Báo Cổ Phiếu VN30")
+            
+            # Load forecast data from CSV files
+            @st.cache_data
+            def load_forecast_csv_data():
+                """Load forecast data from CSV files"""
+                try:
+                    # Get absolute path to data folder
+                    current_file = os.path.abspath(__file__)
+                    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+                    data_path = os.path.join(project_root, "data")
+                    
+                    # Load XGBoost forecast data
+                    xgboost_path = os.path.join(data_path, "forecast_vn30_AllIndicators_XGBoost (final).csv")
+                    svr_path = os.path.join(data_path, "forecast_vn30_SVR_summary.csv")
+                    
+                    # Check if files exist before reading
+                    if not os.path.exists(xgboost_path):
+                        raise FileNotFoundError(f"XGBoost file không tồn tại: {xgboost_path}")
+                    if not os.path.exists(svr_path):
+                        raise FileNotFoundError(f"SVR file không tồn tại: {svr_path}")
+                    
+                    xgboost_data = pd.read_csv(xgboost_path)
+                    svr_data = pd.read_csv(svr_path)
+                    
+                    return xgboost_data, svr_data
+                except Exception as e:
+                    st.error("⚠️ Không thể tải dữ liệu dự báo: Không thể đọc file CSV dự báo. Vui lòng kiểm tra file trong thư mục data.")
+                    st.info("💡 Vui lòng đảm bảo các file sau tồn tại trong thư mục data:")
+                    st.write("- forecast_vn30_AllIndicators_XGBoost (final).csv")
+                    st.write("- forecast_vn30_SVR_summary.csv")
+                    return None, None
+            
+            xgboost_data, svr_data = load_forecast_csv_data()
+            
+            if xgboost_data is not None:
+                # Get unique stock codes from XGBoost data
+                stock_codes = sorted(xgboost_data['code'].unique())
+                
+                # Stock selection
+                selected_stock = st.selectbox(
+                    "🏢 Chọn mã cổ phiếu:",
+                    stock_codes,
+                    help="Chọn mã cổ phiếu để xem dự báo chi tiết"
                 )
                 
-                if forecast_chart is None:
-                    show_popup_message("Không thể tạo dự báo. Vui lòng thử lại.", "error")
-                    return
-                
-                # Display chart
-                st.plotly_chart(forecast_chart, use_container_width=True)
-                
-                # Get forecast summary
-                summary = forecaster.get_forecast_summary(selected_symbol, forecast_days)
-                
-                if summary:
-                    # Display forecast summary
-                    st.markdown("### 📊 Tóm Tắt Dự Báo")
+                if selected_stock:
+                    # Filter data for selected stock
+                    stock_xgboost = xgboost_data[xgboost_data['code'] == selected_stock].copy()
                     
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.metric("Giá Hiện Tại", f"{summary['current_price']:,.0f}")
-                    with col2:
-                        st.metric("Giá Dự Báo", f"{summary['forecast_end_price']:,.0f}")
-                    with col3:
-                        st.metric("Thay Đổi", f"{summary['price_change']:,.0f}")
-                    with col4:
-                        st.metric("Thay Đổi %", f"{summary['price_change_pct']:.1f}%")
+                    # Display current stock info
+                    if not stock_xgboost.empty:
+                        current_price = stock_xgboost['last_price'].iloc[0]
+                        base_date = stock_xgboost['base_date'].iloc[0]
+                        
+                        st.markdown(f"#### 📈 Thông Tin Cổ Phiếu: **{selected_stock}**")
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("💰 Giá Hiện Tại", f"{current_price * 1000:,.0f} VND/cổ phiếu")
+                        with col2:
+                            st.metric("📅 Ngày Cơ Sở", base_date)
+                        with col3:
+                            st.metric("🔢 Số Kỳ Hạn Dự Báo", len(stock_xgboost))
+                    
+                    # Create tabs for different views
+                    tab1, tab2, tab3 = st.tabs(["📊 Bảng Dự Báo Chi Tiết", "📈 Biểu Đồ Dự Báo", "📋 So Sánh Mô Hình"])
+                    
+                    with tab1:
+                        st.markdown("#### 📊 Dự Báo XGBoost Chi Tiết")
+                        
+                        # Format the dataframe for better display
+                        display_df = stock_xgboost.copy()
+                        
+                        # Format numeric columns
+                        display_df['last_price'] = display_df['last_price'].apply(lambda x: f"{x * 1000:,.0f} VND/cổ phiếu")
+                        display_df['predicted_price'] = display_df['predicted_price'].apply(lambda x: f"{x * 1000:,.0f} VND/cổ phiếu")
+                        display_df['predicted_return'] = display_df['predicted_return'].apply(lambda x: f"{x:.2f}%")
+                        
+                        # Rename columns for better display
+                        display_df = display_df.rename(columns={
+                            'code': 'Mã CK',
+                            'horizon': 'Kỳ Hạn',
+                            'base_date': 'Ngày Cơ Sở',
+                            'future_date': 'Ngày Dự Báo',
+                            'last_price': 'Giá Hiện Tại',
+                            'predicted_return': 'Lợi Nhuận Dự Báo (%)',
+                            'predicted_price': 'Giá Dự Báo'
+                        })
+                        
+                        # Color-code the predictions
+                        def color_predictions(val, col_name):
+                            if 'Lợi Nhuận Dự Báo' in col_name:
+                                try:
+                                    num_val = float(str(val).replace('%', ''))
+                                    if num_val > 2:
+                                        return 'background-color: #d4edda; color: #155724'  # Green
+                                    elif num_val > 0:
+                                        return 'background-color: #d1ecf1; color: #0c5460'  # Light blue
+                                    elif num_val > -2:
+                                        return 'background-color: #fff3cd; color: #856404'  # Yellow
+                                    else:
+                                        return 'background-color: #f8d7da; color: #721c24'  # Red
+                                except:
+                                    return ''
+                            return ''
+                        
+                        # Apply styling only to the return column
+                        styled_df = display_df.style.map(lambda x: color_predictions(x, 'Lợi Nhuận Dự Báo (%)'), subset=['Lợi Nhuận Dự Báo (%)'])
+                        st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                        
+                        # Summary statistics
+                        st.markdown("#### 📊 Thống Kê Tóm Tắt")
+                        
+                        # Calculate statistics
+                        returns = stock_xgboost['predicted_return'].astype(float)
+                        prices = stock_xgboost['predicted_price'].astype(float)
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("📈 Lợi Nhuận Trung Bình", f"{returns.mean():.2f}%")
+                        with col2:
+                            st.metric("📊 Độ Lệch Chuẩn", f"{returns.std():.2f}%")
+                        with col3:
+                            st.metric("🎯 Giá Cao Nhất", f"{prices.max() * 1000:,.0f} VND/cổ phiếu")
+                        with col4:
+                            st.metric("🎯 Giá Thấp Nhất", f"{prices.min() * 1000:,.0f} VND/cổ phiếu")
+                    
+                    with tab2:
+                        st.markdown("#### 📈 Biểu Đồ Dự Báo")
+                        
+                        # Create forecast chart
+                        fig = go.Figure()
+                        
+                        # Convert horizon to numeric for sorting
+                        stock_xgboost['horizon_numeric'] = stock_xgboost['horizon'].str.extract('(\d+)').astype(int)
+                        stock_xgboost = stock_xgboost.sort_values('horizon_numeric')
+                        
+                        # Add current price line
+                        fig.add_hline(
+                            y=current_price * 1000, 
+                            line_dash="dash", 
+                            line_color="gray",
+                            annotation_text=f"Giá hiện tại: {current_price * 1000:,.0f} VND/cổ phiếu"
+                        )
+                        
+                        # Add predicted prices
+                        fig.add_trace(go.Scatter(
+                            x=stock_xgboost['horizon'],
+                            y=stock_xgboost['predicted_price'] * 1000,
+                            mode='lines+markers',
+                            name='Giá Dự Báo',
+                            line=dict(color='#1f77b4', width=3),
+                            marker=dict(size=8)
+                        ))
+                        
+                        # Color markers based on return
+                        colors = []
+                        for ret in stock_xgboost['predicted_return']:
+                            if ret > 2:
+                                colors.append('#28a745')  # Green
+                            elif ret > 0:
+                                colors.append('#17a2b8')  # Light blue
+                            elif ret > -2:
+                                colors.append('#ffc107')  # Yellow
+                            else:
+                                colors.append('#dc3545')  # Red
+                        
+                        fig.add_trace(go.Scatter(
+                            x=stock_xgboost['horizon'],
+                            y=stock_xgboost['predicted_price'] * 1000,
+                            mode='markers',
+                            name='Xu Hướng',
+                            marker=dict(size=12, color=colors),
+                            showlegend=False
+                        ))
+                        
+                        fig.update_layout(
+                            title=f'Dự Báo Giá Cổ Phiếu {selected_stock}',
+                            xaxis_title='Kỳ Hạn Dự Báo',
+                            yaxis_title='Giá (VND/cổ phiếu)',
+                            height=500,
+                            hovermode='x unified'
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Return chart
+                        fig_return = go.Figure()
+                        
+                        fig_return.add_trace(go.Bar(
+                            x=stock_xgboost['horizon'],
+                            y=stock_xgboost['predicted_return'],
+                            name='Lợi Nhuận Dự Báo (%)',
+                            marker_color=colors
+                        ))
+                        
+                        fig_return.add_hline(y=0, line_dash="dash", line_color="gray")
+                        
+                        fig_return.update_layout(
+                            title=f'Lợi Nhuận Dự Báo {selected_stock}',
+                            xaxis_title='Kỳ Hạn Dự Báo',
+                            yaxis_title='Lợi Nhuận (%)',
+                            height=400
+                        )
+                        
+                        st.plotly_chart(fig_return, use_container_width=True)
+                    
+                    with tab3:
+                        st.markdown("#### 📋 So Sánh Mô Hình XGBoost vs SVR")
+                        
+                        if svr_data is not None:
+                            st.markdown("**🤖 Dự Báo XGBoost (Chi Tiết Theo Mã Cổ Phiếu)**")
+                            
+                            # Show XGBoost summary for selected stock
+                            xgboost_summary = stock_xgboost[['horizon', 'predicted_return', 'predicted_price']].copy()
+                            xgboost_summary['Mô Hình'] = 'XGBoost'
+                            
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                st.write("**📊 Thống Kê XGBoost:**")
+                                st.metric("📈 Lợi Nhuận TB", f"{xgboost_summary['predicted_return'].mean():.2f}%")
+                                st.metric("📊 Độ Lệch Chuẩn", f"{xgboost_summary['predicted_return'].std():.2f}%")
+                                st.metric("🎯 Số Dự Báo", len(xgboost_summary))
+                            
+                            with col2:
+                                st.write("**📊 Thống Kê SVR (VN30 Tổng Thể):**")
+                                if not svr_data.empty:
+                                    svr_returns = svr_data['predicted_return_pct'].astype(float)
+                                    st.metric("📈 Lợi Nhuận TB", f"{svr_returns.mean():.2f}%")
+                                    st.metric("📊 Độ Lệch Chuẩn", f"{svr_returns.std():.2f}%")
+                                    st.metric("🎯 Số Dự Báo", len(svr_data))
+                                else:
+                                    st.write("Không có dữ liệu SVR")
+                            
+                            # Show SVR data
+                            st.markdown("**🔮 Dự Báo SVR (Chỉ Số VN30 Tổng Thể)**")
+                            if not svr_data.empty:
+                                display_svr = svr_data.copy()
+                                display_svr['predicted_return_pct'] = display_svr['predicted_return_pct'].apply(lambda x: f"{x:.2f}%")
+                                display_svr['last_price'] = display_svr['last_price'].apply(lambda x: f"{x:,.2f}")
+                                display_svr['predicted_price'] = display_svr['predicted_price'].apply(lambda x: f"{x:,.2f}")
+                                display_svr['predicted_change'] = display_svr['predicted_change'].apply(lambda x: f"{x:,.2f}")
+                                
+                                display_svr = display_svr.rename(columns={
+                                    'horizon': 'Kỳ Hạn',
+                                    'base_date': 'Ngày Cơ Sở', 
+                                    'future_date': 'Ngày Dự Báo',
+                                    'last_price': 'Chỉ Số Hiện Tại',
+                                    'predicted_price': 'Chỉ Số Dự Báo',
+                                    'predicted_change': 'Thay Đổi',
+                                    'predicted_return_pct': 'Lợi Nhuận (%)'
+                                })
+                                
+                                st.dataframe(display_svr, use_container_width=True, hide_index=True)
+                            else:
+                                st.warning("Không có dữ liệu SVR để hiển thị")
+                        else:
+                            st.warning("Không thể tải dữ liệu SVR để so sánh")
                     
                     # Investment recommendation
-                    st.markdown("### 💰 Khuyến Nghị Đầu Tư")
+                    st.markdown("### 💡 Khuyến Nghị Đầu Tư")
                     
-                    # Create colored background based on trend
-                    if summary['trend_color'] == 'green':
-                        bg_color = "#d4edda"
-                        text_color = "#155724"
-                        border_color = "#c3e6cb"
-                    elif summary['trend_color'] == 'lightgreen':
-                        bg_color = "#d1ecf1"
-                        text_color = "#0c5460"
-                        border_color = "#bee5eb"
-                    elif summary['trend_color'] == 'orange':
-                        bg_color = "#fff3cd"
-                        text_color = "#856404"
-                        border_color = "#ffeaa7"
-                    else:  # red
-                        bg_color = "#f8d7da"
-                        text_color = "#721c24"
-                        border_color = "#f5c6cb"
+                    # Tạo tabs cho khuyến nghị cơ bản và AI
+                    rec_tab1, rec_tab2 = st.tabs(["📊 Phân Tích Cơ Bản", "🤖 Khuyến Nghị AI"])
                     
-                    st.markdown(
-                        f"""
-                        <div style="
-                            background-color: {bg_color}; 
-                            color: {text_color}; 
-                            padding: 15px; 
-                            border-radius: 10px; 
-                            border-left: 5px solid {border_color};
-                            margin: 10px 0;
-                        ">
-                            <h4 style="margin: 0; color: {text_color};">Xu Hướng: {summary['trend']}</h4>
-                            <p style="margin: 5px 0; color: {text_color};">
-                                <strong>Biến động lịch sử:</strong> {summary['historical_volatility']:.2f}%<br>
-                                <strong>Giá cao nhất dự kiến:</strong> {summary['max_forecast_price']:,.0f}<br>
-                                <strong>Giá thấp nhất dự kiến:</strong> {summary['min_forecast_price']:,.0f}<br>
-                                <strong>Giá trung bình dự kiến:</strong> {summary['avg_forecast_price']:,.0f}
-                            </p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
+                    with rec_tab1:
+                        avg_return = stock_xgboost['predicted_return'].mean()
+                        volatility = stock_xgboost['predicted_return'].std()
+                        
+                        if avg_return > 3:
+                            recommendation = "🟢 **MUA MẠNH** - Triển vọng tích cực"
+                            risk_level = "Trung bình đến cao"
+                            color = "#28a745"
+                        elif avg_return > 1:
+                            recommendation = "🟡 **MUA** - Triển vọng khả quan"
+                            risk_level = "Trung bình"
+                            color = "#ffc107"
+                        elif avg_return > -1:
+                            recommendation = "🟠 **GIỮ** - Theo dõi thị trường"
+                            risk_level = "Trung bình"
+                            color = "#fd7e14"
+                        else:
+                            recommendation = "🔴 **BÁN** - Cần thận trọng"
+                            risk_level = "Cao"
+                            color = "#dc3545"
+                        
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background-color: {color}20; 
+                                border-left: 5px solid {color};
+                                padding: 15px;
+                                border-radius: 5px;
+                            ">
+                                <h4 style="color: {color}; margin: 0;">{recommendation}</h4>
+                                <p><strong>Lợi nhuận trung bình dự báo:</strong> {avg_return:.2f}%</p>
+                                <p><strong>Độ biến động:</strong> {volatility:.2f}%</p>
+                                <p><strong>Mức độ rủi ro:</strong> {risk_level}</p>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    
+                    with rec_tab2:
+                        st.markdown("#### 🤖 Phân Tích Chuyên Sâu từ AI")
+                        
+                        if st.button("🧠 Tạo Khuyến Nghị AI", type="primary", key=f"ai_rec_{selected_stock}"):
+                            with st.spinner("AI đang phân tích dữ liệu và tạo khuyến nghị..."):
+                                # Sử dụng API key từ session state
+                                api_key = st.session_state.gemini_api_key
+                                
+                                # Tạo khuyến nghị từ AI
+                                ai_recommendation = get_gemini_investment_recommendation(
+                                    selected_stock, 
+                                    stock_xgboost, 
+                                    api_key
+                                )
+                                
+                                if "Lỗi" not in ai_recommendation:
+                                    # Clean HTML characters from AI response and format (consistent with other AI responses)
+                                    clean_ai_recommendation = ai_recommendation.replace('<', '&lt;').replace('>', '&gt;')
+                                    formatted_ai_recommendation = format_gemini_response(clean_ai_recommendation)
+                                    
+                                    # Hiển thị khuyến nghị AI với styling đẹp
+                                    st.markdown(
+                                        f"""
+                                        <div style='
+                                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                            color: white; 
+                                            padding: 20px; 
+                                            border-radius: 15px; 
+                                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                                            margin: 10px 0;
+                                        '>
+                                            <h4 style="margin: 0 0 15px 0; display: flex; align-items: center;">
+                                                <span style="margin-right: 10px;">🤖</span>
+                                                Khuyến Nghị AI cho {selected_stock}
+                                            </h4>
+                                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; white-space: pre-line;">
+                                                {formatted_ai_recommendation}
+                                            </div>
+                                        </div>
+                                        """,
+                                        unsafe_allow_html=True
+                                    )
+                                    
+                                    # Thêm thông tin bổ sung
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.info("💡 **Lưu ý:** Khuyến nghị này được tạo bởi AI dựa trên dữ liệu dự báo.")
+                                        
+                                else:
+                                    st.error(f"❌ {ai_recommendation}")
+                        else:
+                            st.info("💡 Nhấp vào nút trên để nhận khuyến nghị đầu tư chi tiết từ AI dựa trên dữ liệu dự báo của cổ phiếu này.")
+                    
+                    st.warning(
+                        "⚠️ **LƯU Ý:** Đây là dự báo dựa trên mô hình machine learning và dữ liệu lịch sử. "
+                        "Không phải lời khuyên đầu tư. Vui lòng tham khảo ý kiến chuyên gia tài chính."
                     )
                     
-                    # Risk assessment
-                    st.markdown("### ⚠️ Đánh Giá Rủi Ro")
-                    if summary['historical_volatility'] > 5:
-                        risk_level = "Cao"
-                        risk_color = "#dc3545"  # Red
-                        risk_bg_color = "#f8d7da"  # Light red background
-                        risk_border_color = "#f5c6cb"  # Red border
-                    elif summary['historical_volatility'] > 2:
-                        risk_level = "Trung Bình"
-                        risk_color = "#fd7e14"  # Orange
-                        risk_bg_color = "#fff3cd"  # Light orange background
-                        risk_border_color = "#ffeaa7"  # Orange border
-                    else:
-                        risk_level = "Thấp"
-                        risk_color = "#28a745"  # Green
-                        risk_bg_color = "#d4edda"  # Light green background
-                        risk_border_color = "#c3e6cb"  # Green border
-                    
-                    st.markdown(
-                        f"""
-                        <div style="
-                            background-color: {risk_bg_color}; 
-                            color: #495057; 
-                            padding: 15px; 
-                            border-radius: 10px; 
-                            border: 2px solid {risk_border_color};
-                            margin: 10px 0;
-                        ">
-                            <p style="margin: 0;"><strong>Mức độ rủi ro:</strong> <span style="color: {risk_color}; font-weight: bold; font-size: 1.1em;">{risk_level}</span></p>
-                            <p style="margin: 10px 0 0 0; font-size: 0.9em;"><strong>Biến động lịch sử:</strong> {summary['historical_volatility']:.2f}%</p>
-                            <p style="margin: 10px 0 0 0; font-size: 0.9em;"><strong>Lưu ý:</strong> Dự báo dựa trên dữ liệu lịch sử và mô hình toán học. 
-                            Kết quả thực tế có thể khác biệt đáng kể do các yếu tố không lường trước được.</p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    
-                    show_popup_message(f"Đã tạo dự báo thành công cho {selected_symbol}", "success")
-                else:
-                    show_popup_message("Không thể tạo tóm tắt dự báo", "warning")
+            else:
+                st.error("❌ Không thể tải dữ liệu dự báo CSV. Vui lòng kiểm tra đường dẫn file.")
     
     elif demo_option == "Tải File CSV":
         st.markdown('<div class="section-header">📁 Tải File CSV</div>', unsafe_allow_html=True)
@@ -1000,6 +1498,9 @@ def main():
                         
                         # Success message about AI prediction availability
                         st.success("✅ **Dữ liệu đã được xử lý thành công!** 🤖 Tính năng dự báo AI hiện đã sẵn sàng trong thanh bên.")
+                        
+                    except Exception as e:
+                        st.error(f"Lỗi xử lý file: {str(e)}")
                         
                         # Display basic info for uploaded data
                         st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Đã Tải Lên</div>', unsafe_allow_html=True)
@@ -1135,12 +1636,6 @@ def main():
                             st.error(f"⚠️ Lỗi trong kỹ thuật xây dựng đặc trưng: {str(e)}")
                             st.warning("Sử dụng dữ liệu chỉ với chỉ báo kỹ thuật.")
                             enriched_data = data_with_features.copy()
-                            
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.metric("Đặc Trưng Gốc", len(merged_data.columns))
-                            with col2:
-                                st.metric("Đặc Trưng Cuối Cùng", len(enriched_data.columns))
                         
                         # Show final dataset preview
                         st.markdown('<div class="section-header">📋 Xem Trước Bộ Dữ Liệu Cuối Cùng</div>', unsafe_allow_html=True)
@@ -1220,9 +1715,6 @@ def main():
                                 else:
                                     st.error(f"Không đủ dữ liệu sạch để mô hình hóa. Cần ít nhất {min_required_samples} mẫu, nhưng chỉ có {len(clean_data)} sau khi làm sạch.")
                                     st.error("Hãy thử tải lên nhiều dữ liệu hơn hoặc kiểm tra chất lượng dữ liệu.")
-                        
-                    except Exception as e:
-                        st.error(f"Lỗi xử lý file: {str(e)}")
         
         # AI Prediction for uploaded data - moved outside process_button block
         if uploaded_files and st.session_state.get('upload_processed', False):
@@ -1276,8 +1768,8 @@ def main():
                             'avg_volatility': abs(processed_data['return']).mean() if 'return' in processed_data.columns and len(processed_data) > 0 else 0
                         }
                         
-                        # Use hardcoded API key
-                        api_key = "AIzaSyDMs-iLWgB7NuoCtJLqEj4SwG3qhM3B-gQ"
+                        # Sử dụng API key từ session state
+                        api_key = st.session_state.gemini_api_key
                         
                         # Get AI prediction for uploaded data
                         ai_prediction_uploaded = get_gemini_prediction(uploaded_summary, api_key)
@@ -1297,7 +1789,7 @@ def main():
                                     st.metric("Điểm Dữ Liệu", f"{uploaded_summary['total_days']:,}")
                                 with col2:
                                     if uploaded_summary['current_price'] > 0:
-                                        st.metric("Giá Hiện Tại", f"{uploaded_summary['current_price']:.2f}")
+                                        st.metric("Giá Hiện Tại", f"{uploaded_summary['current_price']:,.0f} VND/cổ phiếu")
                                 with col3:
                                     st.metric("Thay Đổi Mới Nhất", f"{uploaded_summary['latest_change']:.2f}%")
                                 with col4:
@@ -1309,12 +1801,14 @@ def main():
                                 st.markdown("#### 📊 Phân Tích Chi Tiết Dữ Liệu Của Bạn:")
                                 
                                 # Create a styled container for the prediction (same as sample demo)
-                                prediction_container = st.container()
-                                with prediction_container:
-                                    formatted_response = format_gemini_response(ai_prediction_uploaded)
+                                with st.container():
+                                    # Clean the response to avoid HTML conflicts
+                                    clean_response = ai_prediction_uploaded.replace('<', '&lt;').replace('>', '&gt;')
+                                    formatted_response = format_gemini_response(clean_response)
+                                    
                                     st.markdown(
                                         f"""
-                                        <div style='background-color: #000000; color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin: 10px 0;'>
+                                        <div style='background-color: #000000; color: #ffffff; padding: 20px; border-radius: 10px; border-left: 5px solid #1f77b4; margin: 10px 0; white-space: pre-line;'>
                                             {formatted_response}
                                         </div>
                                         """,

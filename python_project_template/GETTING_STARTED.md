@@ -217,6 +217,31 @@ set PYTHONPATH=%PYTHONPATH%;%CD%\src          # Windows
 streamlit run src/stock_predictor/app.py
 ```
 
+## ❌ Khắc Phục Lỗi Thường Gặp
+
+### Lỗi: "Không thể tải dữ liệu từ Desktop"
+
+**Nguyên nhân:** Ứng dụng không tìm thấy file dữ liệu USD/Gold cho Demo Forecast.
+
+**Giải pháp:**
+
+1. **Sử dụng dữ liệu mẫu có sẵn** (Khuyến nghị):
+   - Project đã có sẵn dữ liệu mẫu trong `data/`
+   - App sẽ tự động sử dụng file mẫu nếu không tìm thấy dữ liệu thật
+
+2. **Cung cấp dữ liệu thật**:
+   - Đặt file `Dữ liệu Lịch sử USD_VND.csv` vào Desktop
+   - Đặt file `dữ liệu lịch sử giá vàng.csv` vào Desktop
+
+3. **Sử dụng tính năng khác**:
+   - Thử "Demo VN30 Data" thay vì Forecast Demo
+   - Upload file CSV của riêng bạn
+   - Sử dụng các tính năng phân tích khác
+
+📖 **Chi tiết**: Xem `data/DATA_SETUP_GUIDE.md`
+
+---
+
 ## 📚 Tài Liệu Thêm
 
 - **README.md**: Thông tin chi tiết về project
