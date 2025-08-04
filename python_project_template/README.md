@@ -1,71 +1,81 @@
-## Tiếng Việt
+# Stock Market Index Prediction System
 
-Hệ thống học máy toàn diện để dự báo chuyển động thị trường chứng khoán sử dụng các chỉ báo kỹ thuật và thuật toán ML truyền thống. Dự án triển khai pipeline hoàn chỉnh từ tiền xử lý dữ liệu đến kỹ thuật tạo đặc trưng, dựa trên các kỹ thuật phân tích tài chính đã được chứng minh.
+## 🚀 Quick Start
 
-### Tính năng chính
+**👥 Mới sử dụng? Xem hướng dẫn chi tiết:** [GETTING_STARTED.md](GETTING_STARTED.md)
 
-- **Tiền xử lý Dữ liệu**: Tự động làm sạch, chuẩn hóa và tính toán tỷ suất sinh lời
-- **Chỉ báo Kỹ thuật**:
-  - Đường trung bình động đơn giản (SMA) và hàm mũ (EMA)
+**📊 Chạy ngay:** `streamlit run src/stock_predictor/app.py`
+
+---
+
+## English
+
+A comprehensive machine learning system for predicting stock market movements using technical indicators and traditional ML algorithms. This project implements a complete pipeline from data preprocessing to feature engineering, based on proven financial analysis techniques.
+
+### Key Features
+
+- **Data Preprocessing**: Automatic cleaning, normalization, and return calculation
+- **Technical Indicators**:
+  - Simple (SMA) and Exponential Moving Averages (EMA)
   - MACD (Moving Average Convergence Divergence)
   - RSI (Relative Strength Index)
   - Bollinger Bands
   - ATR (Average True Range)
   - OBV (On Balance Volume)
-- **Kỹ thuật Tạo Đặc trưng**: Phân tích kỹ thuật toàn diện sử dụng thư viện `ta`
-- **Mô hình Học máy**: Các thuật toán ML truyền thống (Random Forest, XGBoost, SVM)
-- **Demo Tương tác**: Ứng dụng web Streamlit với dữ liệu mẫu và tải lên CSV
-- **Trực quan hóa**: Biểu đồ nâng cao với Plotly cho phân tích kỹ thuật
+- **Feature Engineering**: Comprehensive technical analysis using `ta` library
+- **Machine Learning Models**: Traditional ML algorithms (Random Forest, XGBoost, SVM)
+- **Interactive Demo**: Streamlit web app with sample data and CSV upload
+- **Visualization**: Advanced plotting with Plotly for technical analysis
 
-### Bắt đầu nhanh
+### Quick Start
 
-#### Cài đặt
+#### Installation
 
 ```bash
-# Điều hướng đến thư mục dự án
+# Navigate to project directory
 cd python_project_template
 
-# Tạo môi trường ảo
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Trên Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Cài đặt dependencies
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-#### Sử dụng Demo
+#### Running Demo
 
-Chạy script demo để kiểm tra pipeline:
+Run the demo script to test the pipeline:
 
 ```bash
 python demo_reference_implementation.py
 ```
 
-#### Giao diện Web
+#### Web Interface
 
-Khởi chạy dashboard Streamlit:
+Launch the Streamlit dashboard:
 
 ```bash
 streamlit run src/stock_predictor/app.py
 ```
 
-Ứng dụng web bao gồm:
-- Demo dữ liệu mẫu
-- Trực quan hóa chỉ báo kỹ thuật
-- Tải lên file CSV để phân tích dữ liệu tùy chỉnh
-- Showcase kỹ thuật tạo đặc trưng
+The web app includes:
+- Sample data demo
+- Technical indicator visualizations
+- CSV file upload for custom data analysis
+- Feature engineering showcase
 
-#### Sử dụng cơ bản
+#### Basic Usage
 
 ```python
 from stock_predictor.data.preprocessor import DataPreprocessor
 from stock_predictor.data.features import FeatureEngineer
 
-# Khởi tạo components
+# Initialize components
 preprocessor = DataPreprocessor()
 feature_engineer = FeatureEngineer()
 
-# Xử lý dữ liệu
+# Process data
 processed_data = preprocessor.prepare_data(raw_data)
 features = feature_engineer.create_features(processed_data)
 ```
@@ -75,17 +85,17 @@ features = feature_engineer.create_features(processed_data)
 ```
 src/stock_predictor/
 ├── __init__.py
-├── main.py                 # Entry point chính
+├── main.py                 # Main entry point
 ├── cli.py                  # Command line interface
 ├── app.py                  # Streamlit web application
 ├── data/
 │   ├── __init__.py
-│   ├── collector.py        # Thu thập dữ liệu
-│   ├── preprocessor.py     # Xử lý dữ liệu (Updated)
+│   ├── collector.py        # Data collection
+│   ├── preprocessor.py     # Data preprocessing (Updated)
 │   └── features.py         # Feature engineering (Updated)
 ├── models/
 │   ├── __init__.py
-│   ├── base_model.py       # Base class cho models
+│   ├── base_model.py       # Base class for models
 │   ├── traditional.py      # Random Forest, XGBoost, etc.
 │   ├── deep_learning.py    # LSTM, Neural Networks (Disabled)
 │   ├── ensemble.py         # Fusion techniques
@@ -93,7 +103,7 @@ src/stock_predictor/
 ├── evaluation/
 │   ├── __init__.py
 │   ├── metrics.py          # Evaluation metrics
-│   └── visualization.py    # Plotting và charts
+│   └── visualization.py    # Plotting and charts
 └── utils/
     ├── __init__.py
     ├── config.py           # Configuration

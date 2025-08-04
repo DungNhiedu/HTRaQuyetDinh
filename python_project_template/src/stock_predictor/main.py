@@ -7,17 +7,35 @@ import numpy as np
 from typing import Dict, List, Any, Optional, Tuple, Union
 import logging
 import os
+import sys
 from datetime import datetime, timedelta
 
-# Import modules
-from .data.collector import DataCollector
-from .data.preprocessor import DataPreprocessor
-from .data.features import FeatureEngineer
-from .models.ensemble import EnsemblePredictor
-from .models.traditional import TraditionalModels
-from .models.deep_learning import DeepLearningModels
-# from .models.arima import ARIMAModel  # Disabled for now
-from .evaluation.metrics import ModelEvaluator
+# Add current directory to path to enable imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+# Import modules using absolute imports
+try:
+    from stock_predictor.data.collector import DataCollector
+    from stock_predictor.data.preprocessor import DataPreprocessor
+    from stock_predictor.data.features import FeatureEngineer
+    from stock_predictor.models.ensemble import EnsemblePredictor
+    from stock_predictor.models.traditional import TraditionalModels
+    from stock_predictor.models.deep_learning import DeepLearningModels
+    # from stock_predictor.models.arima import ARIMAModel  # Disabled for now
+    from stock_predictor.evaluation.metrics import ModelEvaluator
+except ImportError:
+    # Fallback to relative imports if absolute imports fail
+    from data.collector import DataCollector
+    from data.preprocessor import DataPreprocessor
+    from data.features import FeatureEngineer
+    from models.ensemble import EnsemblePredictor
+    from models.traditional import TraditionalModels
+    from models.deep_learning import DeepLearningModels
+    # from models.arima import ARIMAModel  # Disabled for now
+    from evaluation.metrics import ModelEvaluator
 from .evaluation.visualization import Visualizer
 from .utils.config import data_config, model_config, evaluation_config
 from .utils.helpers import setup_logging, validate_data_format, save_object, load_object
@@ -253,8 +271,10 @@ class StockPredictor:
                     model = DeepLearningModels.create_model(model_type)
                     
                 elif model_type == 'arima':
-                    # ARIMA model
-                    model = ARIMAModel()
+                    # ARIMA model - temporarily disabled
+                    logger.warning("ARIMA model is temporarily disabled")
+                    continue
+                    # model = ARIMAModel()
                     
                 else:
                     logger.warning(f"Unknown model type: {model_type}")
