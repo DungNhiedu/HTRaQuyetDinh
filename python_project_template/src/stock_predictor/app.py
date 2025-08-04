@@ -309,14 +309,14 @@ def generate_future_prediction(data_summary):
     
     {direction} **Xu hướng dài hạn:** {trend}
     
-    📊 **Ước tính tăng trưởng hàng năm:** {growth_estimate}
+    **Ước tính tăng trưởng hàng năm:** {growth_estimate}
     
-    🎯 **Kịch bản dự kiến:**
+    **Kịch bản dự kiến:**
     - **Năm 1-3 (2025-2027):** Tiếp tục xu hướng hiện tại với biến động {avg_volatility:.1f}%
     - **Năm 4-7 (2028-2031):** Điều chỉnh theo chu kỳ kinh tế
     - **Năm 8-10 (2032-2035):** Ổn định ở mức giá mới
     
-    💡 **Lưu ý:** Dự báo dài hạn có độ không chắc chắn cao do nhiều yếu tố không dự đoán được.
+    **Lưu ý:** Dự báo dài hạn có độ không chắc chắn cao do nhiều yếu tố không dự đoán được.
     """
     
     return projection_text
@@ -495,11 +495,11 @@ def main():
     """Main application function."""
     
     # Header
-    st.markdown('<div class="main-header">📈 Hệ Thống Dự Báo Thị Trường</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">Hệ Thống Dự Báo Thị Trường</div>', unsafe_allow_html=True)
     st.markdown('<div style="text-align: center; margin-bottom: 2rem;">Dự báo chỉ số thị trường sử dụng Machine Learning và AI</div>', unsafe_allow_html=True)
     
     # Sidebar
-    st.sidebar.header("⚙️ Hệ Thống Chính")
+    st.sidebar.header("Hệ Thống Chính")
     
     # Demo options - define this first
     demo_option = st.sidebar.selectbox(
@@ -508,7 +508,7 @@ def main():
     )
     
     # AI Prediction Button - only show if we have data
-    st.sidebar.markdown("### 🤖 Dự Báo AI")
+    st.sidebar.markdown("### Dự Báo AI")
     
     # Hidden API Key Configuration - không hiển thị trên UI
     # Get API key from session state or use default
@@ -534,7 +534,7 @@ def main():
     
     if has_sample_data or has_uploaded_data:
         use_ai_prediction = st.sidebar.button(
-            "🧠 Nhận Dự Báo Thị Trường AI",
+            "Nhận Dự Báo Thị Trường AI",
             type="primary",
             help="Nhấp để nhận phân tích và dự báo thị trường bằng AI",
             use_container_width=True
@@ -543,15 +543,15 @@ def main():
         use_ai_prediction = False
         if demo_option == "Tải File CSV":
             if not st.session_state.get('upload_processed', False):
-                st.sidebar.info("💡 Vui lòng tải lên và xử lý file CSV trước")
+                st.sidebar.info("Vui lòng tải lên và xử lý file CSV trước")
             else:
-                st.sidebar.warning("⚠️ Dữ liệu không sẵn sàng cho dự báo AI")
+                st.sidebar.warning("Dữ liệu không sẵn sàng cho dự báo AI")
         else:
-            st.sidebar.info("💡 Chọn demo hoặc tải dữ liệu để sử dụng dự báo AI")
+            st.sidebar.info("Chọn demo hoặc tải dữ liệu để sử dụng dự báo AI")
     
     
     if demo_option == "Demo Dữ Liệu Mẫu":
-        st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Mẫu</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Phân Tích Dữ Liệu Mẫu</div>', unsafe_allow_html=True)
         
         # Load real VN30 data instead of synthetic data
         # Get absolute path to data folder
@@ -584,7 +584,7 @@ def main():
             show_popup_message("Đã tải thành công dữ liệu VN30!", "success")
             
             # Show actual VN30 data analysis
-            with st.expander("📊 Phân Tích Dữ Liệu VN30", expanded=True):
+            with st.expander("Phân Tích Dữ Liệu VN30", expanded=True):
                 st.write("**Nguồn Dữ Liệu:** Dữ Liệu Lịch Sử Chỉ Số VN30 Việt Nam")
                 
                 # Show raw data sample
@@ -597,7 +597,7 @@ def main():
             show_popup_message("Đang sử dụng dữ liệu chỉ số VN30 thực tế", "info")
             
         except Exception as e:
-            show_popup_message("⚠️ Không thể tải dữ liệu VN30: Không thể đọc file CSV VN30. Sử dụng dữ liệu tổng hợp thay thế.", "warning")
+            show_popup_message("Không thể tải dữ liệu VN30: Không thể đọc file CSV VN30. Sử dụng dữ liệu tổng hợp thay thế.", "warning")
             # Fallback to synthetic data
             with st.spinner("Đang tạo dữ liệu mẫu..."):
                 sample_data = create_sample_data()
@@ -626,7 +626,7 @@ def main():
                 st.metric("% Ngày Tăng", "N/A")
         
         # Add technical indicators
-        st.markdown('<div class="section-header">🔧 Kỹ Thuật Xây Dựng Đặc Trưng</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Kỹ Thuật Xây Dựng Đặc Trưng</div>', unsafe_allow_html=True)
         
         with st.spinner("Đang thêm các chỉ báo kỹ thuật..."):
             data_with_features = add_technical_indicators(sample_data)
@@ -634,7 +634,7 @@ def main():
         show_popup_message("Đã thêm thành công các chỉ báo kỹ thuật!", "success")
         
         # Debug: Show what indicators were actually added
-        with st.expander("🔍 Gỡ Lỗi: Trạng Thái Chỉ Báo Kỹ Thuật"):
+        with st.expander("Gỡ Lỗi: Trạng Thái Chỉ Báo Kỹ Thuật"):
             st.write("**Các cột có sẵn sau khi thêm chỉ báo kỹ thuật:**")
             all_cols = list(data_with_features.columns)
             original_cols = list(sample_data.columns)
@@ -670,7 +670,7 @@ def main():
                 st.write(f"• {feature}")
         
         # Visualizations
-        st.markdown('<div class="section-header">📈 Biểu Đồ & Phân Tích</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Biểu Đồ & Phân Tích</div>', unsafe_allow_html=True)
         
         # Price chart
         st.write("**Biểu Đồ Giá Chỉ Số VN30 với Các Chỉ Báo Kỹ Thuật:**")
@@ -678,7 +678,7 @@ def main():
         st.plotly_chart(price_fig, use_container_width=True)
         
         # Show chart info
-        with st.expander("📊 Thông Tin Biểu Đồ"):
+        with st.expander("Thông Tin Biểu Đồ"):
             available_indicators = []
             ma_cols = [col for col in data_with_features.columns if 'ma_' in col.lower() or 'sma_' in col.lower()]
             bb_cols = [col for col in data_with_features.columns if 'bb_' in col.lower()]
@@ -704,7 +704,7 @@ def main():
         st.plotly_chart(rsi_fig, use_container_width=True)
         
         # Feature engineering demo
-        st.markdown('<div class="section-header">🧠 Kỹ Thuật Xây Dựng Đặc Trưng Nâng Cao</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Kỹ Thuật Xây Dựng Đặc Trưng Nâng Cao</div>', unsafe_allow_html=True)
         
         feature_engineer = FeatureEngineer()
         
@@ -722,7 +722,7 @@ def main():
             st.metric("Đặc Trưng Cuối Cùng", len(enriched_data.columns))
         
         # Show data sample
-        st.markdown('<div class="section-header">📋 Xem Trước Dữ Liệu</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Xem Trước Dữ Liệu</div>', unsafe_allow_html=True)
         
         st.write("**Xem trước bộ dữ liệu cuối cùng (Dữ Liệu VN30 Thực Tế):**")
         st.dataframe(enriched_data.head(), use_container_width=True)
@@ -734,19 +734,19 @@ def main():
             st.write("**Đặc trưng sau khi enrich data:**", len(enriched_data.columns))
         
         # Model demonstration
-        st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
         
-        if st.button("🚀 Chạy Demo Huấn Luyện Mô Hình", type="primary"):
+        if st.button("Chạy Demo Huấn Luyện Mô Hình", type="primary"):
             with st.spinner("Đang chuẩn bị dữ liệu cho mô hình..."):
                 # Prepare data for modeling
                 # Show data info before cleaning
-                st.info(f"📊 Dữ liệu trước khi làm sạch: {enriched_data.shape}")
-                st.info(f"📊 Giá trị NaN: {enriched_data.isnull().sum().sum()}")
+                st.info(f"Dữ liệu trước khi làm sạch: {enriched_data.shape}")
+                st.info(f"Giá trị NaN: {enriched_data.isnull().sum().sum()}")
                 
                 # Remove rows with NaN values, but be more flexible
                 clean_data = enriched_data.dropna()
                 
-                st.info(f"📊 Dữ liệu sau khi làm sạch: {clean_data.shape}")
+                st.info(f"Dữ liệu sau khi làm sạch: {clean_data.shape}")
                 
                 # Lower the threshold for minimum data points
                 min_required_samples = min(20, len(enriched_data) // 4)  # More flexible threshold
@@ -764,7 +764,7 @@ def main():
                     X = clean_data[numeric_features]
                     y = clean_data['target']
                     
-                    st.info(f"📊 Đã chọn {len(numeric_features)} đặc trưng số cho mô hình")
+                    st.info(f"Đã chọn {len(numeric_features)} đặc trưng số cho mô hình")
                     
                     # Simple train/test split
                     split_idx = max(1, int(0.8 * len(clean_data)))  # Ensure at least 1 sample for test
@@ -807,7 +807,7 @@ def main():
                     st.error("Hãy thử tải lên nhiều dữ liệu hơn hoặc kiểm tra chất lượng dữ liệu.")
         
         # AI Prediction Section
-        st.markdown('<div class="section-header">🤖 Dự Báo Thị Trường Dựa Trên AI</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Dự Báo Thị Trường Dựa Trên AI</div>', unsafe_allow_html=True)
         
         if use_ai_prediction:
             with st.spinner("Đang phân tích dữ liệu với AI..."):
@@ -826,10 +826,10 @@ def main():
                 api_key = st.session_state.gemini_api_key
                 ai_prediction = get_gemini_prediction(data_summary, api_key)
                 st.markdown("---")
-                st.markdown("### 🔮 AI Market Analysis & Prediction")
+                st.markdown("### AI Market Analysis & Prediction")
                 if "Lỗi" not in ai_prediction:
-                    with st.expander("📊 Xem dự báo AI cho 10 năm tiếp theo", expanded=True):
-                        st.success("✅ AI đã phân tích xong!")
+                    with st.expander("Xem dự báo AI cho 10 năm tiếp theo", expanded=True):
+                        st.success("AI đã phân tích xong!")
                         col1, col2, col3, col4 = st.columns(4)
                         with col1:
                             st.metric("Số ngày phân tích", f"{data_summary['total_days']:,}")
@@ -852,7 +852,7 @@ def main():
                             """,
                             unsafe_allow_html=True
                         )
-                        st.markdown("#### 🔮 Dự báo mở rộng (10 năm tiếp theo)")
+                        st.markdown("#### Dự báo mở rộng (10 năm tiếp theo)")
                         future_prediction = generate_future_prediction(data_summary)
                         st.info(future_prediction)
                         st.markdown("---")
@@ -864,16 +864,16 @@ def main():
                 else:
                     st.error(ai_prediction)
         else:
-            st.info("💡 Nhấp vào nút 'Nhận Dự Báo Thị Trường AI' trong thanh bên để nhận phân tích AI về thị trường")
+            st.info("Nhấp vào nút 'Nhận Dự Báo Thị Trường AI' trong thanh bên để nhận phân tích AI về thị trường")
     
     elif demo_option == "Demo Dự Báo":
         # Import forecaster here to avoid circular imports
         from forecast.forecaster import StockForecaster
         
-        st.markdown('<div class="section-header">📈 Demo Dự Báo Giá</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Demo Dự Báo Giá</div>', unsafe_allow_html=True)
         
         # Add tab for different forecast types
-        forecast_tab1, forecast_tab2 = st.tabs(["🔮 Dự Báo USD/VND & Vàng", "📊 Dự Báo Cổ Phiếu VN30"])
+        forecast_tab1, forecast_tab2 = st.tabs(["Dự Báo USD/VND & Vàng", "Dự Báo Cổ Phiếu VN30"])
         
         with forecast_tab1:
             # Initialize forecaster
@@ -885,7 +885,7 @@ def main():
             
             if not data_loaded:
                 show_popup_message("Không thể tải dữ liệu dự báo. Vui lòng kiểm tra các file dữ liệu.", "error")
-                st.error("❌ Không thể tải dữ liệu dự báo từ Desktop")
+                st.error("Không thể tải dữ liệu dự báo từ Desktop")
                 st.error("Vui lòng đảm bảo các file sau tồn tại trên Desktop:")
                 st.write("- Dữ liệu Lịch sử USD_VND.csv")
                 st.write("- dữ liệu lịch sử giá vàng.csv")
@@ -909,7 +909,7 @@ def main():
                 help="Chọn số ngày bạn muốn dự báo vào tương lai"
             )
             
-            if st.button("🔮 Tạo Dự Báo", type="primary"):
+            if st.button("Tạo Dự Báo", type="primary"):
                 with st.spinner(f"Đang tạo dự báo cho {selected_symbol}..."):
                     # Create forecast chart
                     forecast_chart = forecaster.create_forecast_chart(
@@ -930,7 +930,7 @@ def main():
                     
                     if summary:
                         # Display forecast summary
-                        st.markdown("### 📊 Tóm Tắt Dự Báo")
+                        st.markdown("### Tóm Tắt Dự Báo")
                         
                         col1, col2, col3, col4 = st.columns(4)
                         with col1:
@@ -952,7 +952,7 @@ def main():
                             st.metric("Thay Đổi %", f"{summary['price_change_pct']:.1f}%")
                         
                         # Investment recommendation
-                        st.markdown("### 💰 Khuyến Nghị Đầu Tư")
+                        st.markdown("### Khuyến Nghị Đầu Tư")
                         
                         # Create colored background based on trend
                         if summary['trend_color'] == 'green':
@@ -995,7 +995,7 @@ def main():
                         )
                         
                         # Risk assessment
-                        st.markdown("### ⚠️ Đánh Giá Rủi Ro")
+                        st.markdown("### Đánh Giá Rủi Ro")
                         
                         if summary['historical_volatility'] > 5:
                             risk_level = "Cao"
@@ -1037,7 +1037,7 @@ def main():
                         show_popup_message("Không thể tạo tóm tắt dự báo", "warning")
         
         with forecast_tab2:
-            st.markdown("### 📊 Dự Báo Cổ Phiếu VN30")
+            st.markdown("### Dự Báo Cổ Phiếu VN30")
             
             # Load forecast data from CSV files
             @st.cache_data
@@ -1064,8 +1064,8 @@ def main():
                     
                     return xgboost_data, svr_data
                 except Exception as e:
-                    st.error("⚠️ Không thể tải dữ liệu dự báo: Không thể đọc file CSV dự báo. Vui lòng kiểm tra file trong thư mục data.")
-                    st.info("💡 Vui lòng đảm bảo các file sau tồn tại trong thư mục data:")
+                    st.error("Không thể tải dữ liệu dự báo: Không thể đọc file CSV dự báo. Vui lòng kiểm tra file trong thư mục data.")
+                    st.info(" Vui lòng đảm bảo các file sau tồn tại trong thư mục data:")
                     st.write("- forecast_vn30_AllIndicators_XGBoost (final).csv")
                     st.write("- forecast_vn30_SVR_summary.csv")
                     return None, None
@@ -1078,7 +1078,7 @@ def main():
                 
                 # Stock selection
                 selected_stock = st.selectbox(
-                    "🏢 Chọn mã cổ phiếu:",
+                    "Chọn mã cổ phiếu:",
                     stock_codes,
                     help="Chọn mã cổ phiếu để xem dự báo chi tiết"
                 )
@@ -1092,21 +1092,21 @@ def main():
                         current_price = stock_xgboost['last_price'].iloc[0]
                         base_date = stock_xgboost['base_date'].iloc[0]
                         
-                        st.markdown(f"#### 📈 Thông Tin Cổ Phiếu: **{selected_stock}**")
+                        st.markdown(f"#### Thông Tin Cổ Phiếu: **{selected_stock}**")
                         
                         col1, col2, col3 = st.columns(3)
                         with col1:
-                            st.metric("💰 Giá Hiện Tại", f"{current_price * 1000:,.0f} VND/cổ phiếu")
+                            st.metric("Giá Hiện Tại", f"{current_price * 1000:,.0f} VND/cổ phiếu")
                         with col2:
-                            st.metric("📅 Ngày Cơ Sở", base_date)
+                            st.metric("Ngày Cơ Sở", base_date)
                         with col3:
-                            st.metric("🔢 Số Kỳ Hạn Dự Báo", len(stock_xgboost))
+                            st.metric("Số Kỳ Hạn Dự Báo", len(stock_xgboost))
                     
                     # Create tabs for different views
-                    tab1, tab2, tab3 = st.tabs(["📊 Bảng Dự Báo Chi Tiết", "📈 Biểu Đồ Dự Báo", "📋 So Sánh Mô Hình"])
+                    tab1, tab2, tab3 = st.tabs(["Bảng Dự Báo Chi Tiết", "Biểu Đồ Dự Báo", "Mô Hình"])
                     
                     with tab1:
-                        st.markdown("#### 📊 Dự Báo XGBoost Chi Tiết")
+                        st.markdown("#### Dự Báo XGBoost Chi Tiết")
                         
                         # Format the dataframe for better display
                         display_df = stock_xgboost.copy()
@@ -1157,13 +1157,13 @@ def main():
                         
                         col1, col2, col3, col4 = st.columns(4)
                         with col1:
-                            st.metric("📈 Lợi Nhuận Trung Bình", f"{returns.mean():.2f}%")
+                            st.metric("Lợi Nhuận Trung Bình", f"{returns.mean():.2f}%")
                         with col2:
-                            st.metric("📊 Độ Lệch Chuẩn", f"{returns.std():.2f}%")
+                            st.metric("Độ Lệch Chuẩn", f"{returns.std():.2f}%")
                         with col3:
-                            st.metric("🎯 Giá Cao Nhất", f"{prices.max() * 1000:,.0f} VND/cổ phiếu")
+                            st.metric("Giá Cao Nhất", f"{prices.max() * 1000:,.0f} VND/cổ phiếu")
                         with col4:
-                            st.metric("🎯 Giá Thấp Nhất", f"{prices.min() * 1000:,.0f} VND/cổ phiếu")
+                            st.metric("Giá Thấp Nhất", f"{prices.min() * 1000:,.0f} VND/cổ phiếu")
                     
                     with tab2:
                         st.markdown("#### 📈 Biểu Đồ Dự Báo")
@@ -1246,10 +1246,10 @@ def main():
                         st.plotly_chart(fig_return, use_container_width=True)
                     
                     with tab3:
-                        st.markdown("#### 📋 So Sánh Mô Hình XGBoost vs SVR")
+                        st.markdown("#### Mô Hình SVR Tổng Quát của VN30")
                         
                         if svr_data is not None:
-                            st.markdown("**🤖 Dự Báo XGBoost (Chi Tiết Theo Mã Cổ Phiếu)**")
+                            st.markdown("**Dự Báo XGBoost (Chi Tiết Theo Mã Cổ Phiếu)**")
                             
                             # Show XGBoost summary for selected stock
                             xgboost_summary = stock_xgboost[['horizon', 'predicted_return', 'predicted_price']].copy()
@@ -1258,23 +1258,23 @@ def main():
                             col1, col2 = st.columns(2)
                             
                             with col1:
-                                st.write("**📊 Thống Kê XGBoost:**")
-                                st.metric("📈 Lợi Nhuận TB", f"{xgboost_summary['predicted_return'].mean():.2f}%")
-                                st.metric("📊 Độ Lệch Chuẩn", f"{xgboost_summary['predicted_return'].std():.2f}%")
-                                st.metric("🎯 Số Dự Báo", len(xgboost_summary))
+                                st.write("**Thống Kê XGBoost:**")
+                                st.metric("Lợi Nhuận TB", f"{xgboost_summary['predicted_return'].mean():.2f}%")
+                                st.metric("Độ Lệch Chuẩn", f"{xgboost_summary['predicted_return'].std():.2f}%")
+                                st.metric("Số Dự Báo", len(xgboost_summary))
                             
                             with col2:
-                                st.write("**📊 Thống Kê SVR (VN30 Tổng Thể):**")
+                                st.write("**Thống Kê SVR (VN30 Tổng Thể):**")
                                 if not svr_data.empty:
                                     svr_returns = svr_data['predicted_return_pct'].astype(float)
-                                    st.metric("📈 Lợi Nhuận TB", f"{svr_returns.mean():.2f}%")
-                                    st.metric("📊 Độ Lệch Chuẩn", f"{svr_returns.std():.2f}%")
-                                    st.metric("🎯 Số Dự Báo", len(svr_data))
+                                    st.metric("Lợi Nhuận TB", f"{svr_returns.mean():.2f}%")
+                                    st.metric("Độ Lệch Chuẩn", f"{svr_returns.std():.2f}%")
+                                    st.metric("Số Dự Báo", len(svr_data))
                                 else:
                                     st.write("Không có dữ liệu SVR")
                             
                             # Show SVR data
-                            st.markdown("**🔮 Dự Báo SVR (Chỉ Số VN30 Tổng Thể)**")
+                            st.markdown("**Dự Báo SVR (Chỉ Số VN30 Tổng Thể)**")
                             if not svr_data.empty:
                                 display_svr = svr_data.copy()
                                 display_svr['predicted_return_pct'] = display_svr['predicted_return_pct'].apply(lambda x: f"{x:.2f}%")
@@ -1299,10 +1299,10 @@ def main():
                             st.warning("Không thể tải dữ liệu SVR để so sánh")
                     
                     # Investment recommendation
-                    st.markdown("### 💡 Khuyến Nghị Đầu Tư")
+                    st.markdown("### Khuyến Nghị Đầu Tư")
                     
                     # Tạo tabs cho khuyến nghị cơ bản và AI
-                    rec_tab1, rec_tab2 = st.tabs(["📊 Phân Tích Cơ Bản", "🤖 Khuyến Nghị AI"])
+                    rec_tab1, rec_tab2 = st.tabs(["Phân Tích Cơ Bản", "Khuyến Nghị AI"])
                     
                     with rec_tab1:
                         avg_return = stock_xgboost['predicted_return'].mean()
@@ -1343,9 +1343,9 @@ def main():
                         )
                     
                     with rec_tab2:
-                        st.markdown("#### 🤖 Phân Tích Chuyên Sâu từ AI")
+                        st.markdown("#### Phân Tích Chuyên Sâu từ AI")
                         
-                        if st.button("🧠 Tạo Khuyến Nghị AI", type="primary", key=f"ai_rec_{selected_stock}"):
+                        if st.button("Tạo Khuyến Nghị AI", type="primary", key=f"ai_rec_{selected_stock}"):
                             with st.spinner("AI đang phân tích dữ liệu và tạo khuyến nghị..."):
                                 # Sử dụng API key từ session state
                                 api_key = st.session_state.gemini_api_key
@@ -1388,15 +1388,15 @@ def main():
                                     # Thêm thông tin bổ sung
                                     col1, col2 = st.columns(2)
                                     with col1:
-                                        st.info("💡 **Lưu ý:** Khuyến nghị này được tạo bởi AI dựa trên dữ liệu dự báo.")
+                                        st.info("**Lưu ý:** Khuyến nghị này được tạo bởi AI dựa trên dữ liệu dự báo.")
                                         
                                 else:
                                     st.error(f"❌ {ai_recommendation}")
                         else:
-                            st.info("💡 Nhấp vào nút trên để nhận khuyến nghị đầu tư chi tiết từ AI dựa trên dữ liệu dự báo của cổ phiếu này.")
+                            st.info("Nhấp vào nút trên để nhận khuyến nghị đầu tư chi tiết từ AI dựa trên dữ liệu dự báo của cổ phiếu này.")
                     
                     st.warning(
-                        "⚠️ **LƯU Ý:** Đây là dự báo dựa trên mô hình machine learning và dữ liệu lịch sử. "
+                        " **LƯU Ý:** Đây là dự báo dựa trên mô hình machine learning và dữ liệu lịch sử. "
                         "Không phải lời khuyên đầu tư. Vui lòng tham khảo ý kiến chuyên gia tài chính."
                     )
                     
@@ -1404,11 +1404,11 @@ def main():
                 st.error("❌ Không thể tải dữ liệu dự báo CSV. Vui lòng kiểm tra đường dẫn file.")
     
     elif demo_option == "Tải File CSV":
-        st.markdown('<div class="section-header">📁 Tải File CSV</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Tải File CSV</div>', unsafe_allow_html=True)
         
         st.info("Tải file CSV với dữ liệu chứng khoán. Hỗ trợ nhiều định dạng bao gồm định dạng VN30.")
         
-        with st.expander("📋 Các Định Dạng CSV Được Hỗ Trợ", expanded=False):
+        with st.expander(" Các Định Dạng CSV Được Hỗ Trợ", expanded=False):
             st.write("**Định dạng 1 - Định dạng chuẩn:**")
             st.write("Cột: date, open, high, low, close, volume, turnover")
             st.write("Tên file: {MÃ_CHỨNG_KHOÁN}_{gì_đó}.csv")
@@ -1431,7 +1431,7 @@ def main():
             show_popup_message(f"Đã tải lên {len(uploaded_files)} file", "success")
             
             # Show uploaded files info
-            with st.expander("📄 Chi Tiết File Đã Tải Lên"):
+            with st.expander("Chi Tiết File Đã Tải Lên"):
                 for i, uploaded_file in enumerate(uploaded_files, 1):
                     st.write(f"{i}. **{uploaded_file.name}** ({uploaded_file.size:,} bytes)")
             
@@ -1452,7 +1452,7 @@ def main():
             
             # Information about next steps
             if not st.session_state.get('upload_processed', False):
-                st.info("👇 **Bước tiếp theo:** Nhấp vào nút bên dưới để xử lý dữ liệu và kích hoạt tính năng dự báo AI")
+                st.info("**Bước tiếp theo:** Nhấp vào nút bên dưới để xử lý dữ liệu và kích hoạt tính năng dự báo AI")
             
             # Add Process button with a unique key
             process_button = st.button(
@@ -1497,13 +1497,13 @@ def main():
                         st.session_state['uploaded_time_duration'] = uploaded_time_duration
                         
                         # Success message about AI prediction availability
-                        st.success("✅ **Dữ liệu đã được xử lý thành công!** 🤖 Tính năng dự báo AI hiện đã sẵn sàng trong thanh bên.")
+                        st.success("**Dữ liệu đã được xử lý thành công!** Tính năng dự báo AI hiện đã sẵn sàng trong thanh bên.")
                         
                     except Exception as e:
                         st.error(f"Lỗi xử lý file: {str(e)}")
                         
                         # Display basic info for uploaded data
-                        st.markdown('<div class="section-header">📊 Phân Tích Dữ Liệu Đã Tải Lên</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">Phân Tích Dữ Liệu Đã Tải Lên</div>', unsafe_allow_html=True)
                         
                         try:
                             col1, col2, col3, col4, col5 = st.columns(5)
@@ -1529,18 +1529,18 @@ def main():
                                 else:
                                     st.metric("% Ngày Tăng", "N/A")
                         except Exception as e:
-                            st.error(f"⚠️ Lỗi hiển thị số liệu: {str(e)}")
+                            st.error(f"Lỗi hiển thị số liệu: {str(e)}")
                         
                         # Show data preview
                         try:
-                            with st.expander("📊 Phân Tích Dữ Liệu Của Bạn", expanded=True):
+                            with st.expander("Phân Tích Dữ Liệu Của Bạn", expanded=True):
                                 st.write("**Xem trước dữ liệu đã xử lý (10 dòng đầu):**")
                                 display_data = merged_data.head(10).copy()
                                 if 'date' in display_data.columns:
                                     display_data['date'] = pd.to_datetime(display_data['date']).dt.strftime('%Y-%m-%d')
                                 st.dataframe(display_data, use_container_width=True)
                         except Exception as e:
-                            st.error(f"⚠️ Lỗi hiển thị xem trước dữ liệu: {str(e)}")
+                            st.error(f"Lỗi hiển thị xem trước dữ liệu: {str(e)}")
                         
                         # Add technical indicators
                         st.markdown('<div class="section-header">🔧 Phân Tích Kỹ Thuật</div>', unsafe_allow_html=True)
@@ -1561,7 +1561,7 @@ def main():
                                 show_popup_message(f"Đã thêm chỉ báo kỹ thuật! Kích thước cuối: {data_with_features.shape}", "success")
                                 
                                 # Debug: Show what indicators were actually added
-                                with st.expander("🔍 Chi Tiết Chỉ Báo Kỹ Thuật"):
+                                with st.expander("Chi Tiết Chỉ Báo Kỹ Thuật"):
                                     original_cols = set(merged_data.columns)
                                     new_cols = set(data_with_features.columns) - original_cols
                                     
@@ -1585,7 +1585,7 @@ def main():
                                 data_with_features = merged_data.copy()
                         
                         # Charts
-                        st.markdown('<div class="section-header">📈 Biểu Đồ & Hình Ảnh Hóa</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">Biểu Đồ & Hình Ảnh Hóa</div>', unsafe_allow_html=True)
                         
                         # Price chart - with validation
                         try:
@@ -1593,7 +1593,7 @@ def main():
                             price_fig = plot_price_chart(data_with_features)
                             st.plotly_chart(price_fig, use_container_width=True)
                         except Exception as e:
-                            st.error(f"⚠️ Lỗi tạo biểu đồ giá: {str(e)}")
+                            st.error(f" Lỗi tạo biểu đồ giá: {str(e)}")
                             st.warning("Bỏ qua hiển thị biểu đồ giá.")
                         
                         # RSI chart - with validation
@@ -1602,7 +1602,7 @@ def main():
                             rsi_fig = plot_technical_indicators(data_with_features)
                             st.plotly_chart(rsi_fig, use_container_width=True)
                         except Exception as e:
-                            st.error(f"⚠️ Lỗi tạo biểu đồ RSI: {str(e)}")
+                            st.error(f" Lỗi tạo biểu đồ RSI: {str(e)}")
                             st.warning("Bỏ qua hiển thị biểu đồ RSI.")
                         
                         # Store processed data in session state for AI prediction
@@ -1612,10 +1612,10 @@ def main():
                             st.session_state['uploaded_time_duration'] = uploaded_time_duration
                             show_popup_message("Dữ liệu đã được lưu trong phiên làm việc để dự báo AI", "success")
                         except Exception as e:
-                            st.error(f"⚠️ Lỗi lưu trữ dữ liệu trong phiên làm việc: {str(e)}")
+                            st.error(f" Lỗi lưu trữ dữ liệu trong phiên làm việc: {str(e)}")
                         
                         # Advanced Feature Engineering
-                        st.markdown('<div class="section-header">🧠 Kỹ Thuật Xây Dựng Đặc Trưng Nâng Cao</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header"> Kỹ Thuật Xây Dựng Đặc Trưng Nâng Cao</div>', unsafe_allow_html=True)
                         
                         try:
                             feature_engineer = FeatureEngineer()
@@ -1633,30 +1633,30 @@ def main():
                             with col2:
                                 st.metric("Đặc Trưng Cuối Cùng", len(enriched_data.columns))
                         except Exception as e:
-                            st.error(f"⚠️ Lỗi trong kỹ thuật xây dựng đặc trưng: {str(e)}")
+                            st.error(f" Lỗi trong kỹ thuật xây dựng đặc trưng: {str(e)}")
                             st.warning("Sử dụng dữ liệu chỉ với chỉ báo kỹ thuật.")
                             enriched_data = data_with_features.copy()
                         
                         # Show final dataset preview
-                        st.markdown('<div class="section-header">📋 Xem Trước Bộ Dữ Liệu Cuối Cùng</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header"> Xem Trước Bộ Dữ Liệu Cuối Cùng</div>', unsafe_allow_html=True)
                         
                         st.write("**Xem trước bộ dữ liệu đã được enrich cuối cùng (Dữ Liệu Đã Tải Lên Của Bạn):**")
                         st.dataframe(enriched_data.head(), use_container_width=True)
                         
                         # Model Training Demo
-                        st.markdown('<div class="section-header">🤖 Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="section-header">Demo Huấn Luyện Mô Hình</div>', unsafe_allow_html=True)
                         
-                        if st.button("🚀 Chạy Demo Huấn Luyện Mô Hình", type="primary", key="model_training_uploaded"):
+                        if st.button("Chạy Demo Huấn Luyện Mô Hình", type="primary", key="model_training_uploaded"):
                             with st.spinner("Đang chuẩn bị dữ liệu cho mô hình..."):
                                 # Prepare data for modeling
                                 # Show data info before cleaning
-                                st.info(f"📊 Dữ liệu trước khi làm sạch: {enriched_data.shape}")
-                                st.info(f"📊 Giá trị NaN: {enriched_data.isnull().sum().sum()}")
+                                st.info(f"Dữ liệu trước khi làm sạch: {enriched_data.shape}")
+                                st.info(f"Giá trị NaN: {enriched_data.isnull().sum().sum()}")
                                 
                                 # Remove rows with NaN values, but be more flexible
                                 clean_data = enriched_data.dropna()
                                 
-                                st.info(f"📊 Dữ liệu sau khi làm sạch: {clean_data.shape}")
+                                st.info(f"Dữ liệu sau khi làm sạch: {clean_data.shape}")
                                 
                                 # Lower the threshold for minimum data points
                                 min_required_samples = min(10, len(enriched_data) // 4)  # More flexible threshold
@@ -1674,7 +1674,7 @@ def main():
                                     X = clean_data[numeric_features]
                                     y = clean_data['target']
                                     
-                                    st.info(f"📊 Đã chọn {len(numeric_features)} đặc trưng số cho mô hình")
+                                    st.info(f"Đã chọn {len(numeric_features)} đặc trưng số cho mô hình")
                                     
                                     # Simple train/test split
                                     split_idx = max(1, int(0.8 * len(clean_data)))  # Ensure at least 1 sample for test
@@ -1718,7 +1718,7 @@ def main():
         
         # AI Prediction for uploaded data - moved outside process_button block
         if uploaded_files and st.session_state.get('upload_processed', False):
-            st.markdown('<div class="section-header">🤖 Phân Tích AI cho Dữ Liệu Của Bạn</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-header"> Phân Tích AI cho Dữ Liệu Của Bạn</div>', unsafe_allow_html=True)
             
             # Check if sidebar AI prediction button was pressed and we have uploaded data
             if use_ai_prediction and st.session_state.get('upload_processed', False):
@@ -1776,7 +1776,7 @@ def main():
                         
                         # Display prediction with enhanced UI
                         st.markdown("---")
-                        st.markdown("### 🔮 Phân Tích AI Dữ Liệu Thị Trường Của Bạn")
+                        st.markdown("###  Phân Tích AI Dữ Liệu Thị Trường Của Bạn")
                         
                         if "Lỗi" not in ai_prediction_uploaded:
                             # Create an enhanced display for uploaded data analysis
@@ -1798,7 +1798,7 @@ def main():
                                 st.markdown("---")
                                 
                                 # Display the AI prediction in a styled container with black background
-                                st.markdown("#### 📊 Phân Tích Chi Tiết Dữ Liệu Của Bạn:")
+                                st.markdown("####  Phân Tích Chi Tiết Dữ Liệu Của Bạn:")
                                 
                                 # Create a styled container for the prediction (same as sample demo)
                                 with st.container():
@@ -1816,14 +1816,14 @@ def main():
                                     )
                                 
                                 # Add future prediction for uploaded data
-                                st.markdown("#### 🔮 Dự Báo Mở Rộng (10 Năm Tiếp Theo)")
+                                st.markdown("####  Dự Báo Mở Rộng (10 Năm Tiếp Theo)")
                                 future_prediction_uploaded = generate_future_prediction(uploaded_summary)
                                 st.info(future_prediction_uploaded)
                                 
                                 # Add disclaimer with prominent styling
                                 st.markdown("---")
                                 st.warning(
-                                    "⚠️ **LƯU Ý QUAN TRỌNG:** Đây là phân tích AI dựa trên dữ liệu lịch sử của bạn. "
+                                    " **LƯU Ý QUAN TRỌNG:** Đây là phân tích AI dựa trên dữ liệu lịch sử của bạn. "
                                     "Không được coi là lời khuyên đầu tư. Thị trường chứng khoán có rủi ro cao. "
                                     "Vui lòng tham khảo ý kiến chuyên gia tài chính trước khi đưa ra quyết định đầu tư."
                                 )
@@ -1847,7 +1847,7 @@ def main():
     st.markdown(
         """
         <div style="text-align: center; color: #666;">
-            <p>📊 Hệ Thống Dự Báo Thị Trường Chứng Khoán</p>
+            <p>Hệ Thống Dự Báo Thị Trường Chứng Khoán</p>
             <p>Được phát triển với Machine Learning và AI</p>
         </div>
         """,
